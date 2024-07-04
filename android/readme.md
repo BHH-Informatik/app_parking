@@ -1,3 +1,0 @@
-# app parking mobile 
-
-# android 
