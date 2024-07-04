@@ -1,88 +1,69 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<List<TableData>> tableData;
+
+  @override
+  void initState() {
+    super.initState();
+    tableData = fetchTableData();
+  }
+
+  Future<List<TableData>> fetchTableData() async {
+    final response = await http.get(Uri.parse('https://kapanke.net/capstone/table'));
+
+    if (response.statusCode == 200) {
+      List jsonResponse = json.decode(response.body);
+      return jsonResponse.map((data) => TableData.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          const Text(
-            'Home Screen oder so ähnlich',
-            style: TextStyle(fontSize: 24),
-          ),
-          const SizedBox(height: 30), // Abstand zwischen Text und Tabelle
-          Table(
-            // border: TableBorder.all(),
-            children: const [
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P1', textColor: Colors.white, backgroundColor: Colors.blue),
-                  CustomTableCell(text: 'P2', textColor: Colors.black, backgroundColor: Colors.yellow),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P3', textColor: Colors.white, backgroundColor: Colors.green),
-                  CustomTableCell(text: 'P4', textColor: Colors.black, backgroundColor: Colors.orange),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P5', textColor: Colors.white, backgroundColor: Colors.red),
-                  CustomTableCell(text: 'P6', textColor: Colors.black, backgroundColor: Colors.purple),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P7', textColor: Colors.white, backgroundColor: Colors.teal),
-                  CustomTableCell(text: 'P8', textColor: Colors.black, backgroundColor: Colors.pink),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P9', textColor: Colors.white, backgroundColor: Colors.brown),
-                  CustomTableCell(text: 'P10', textColor: Colors.black, backgroundColor: Colors.cyan),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P11', textColor: Colors.white, backgroundColor: Colors.indigo),
-                  CustomTableCell(text: 'P12', textColor: Colors.black, backgroundColor: Colors.lime),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P13', textColor: Colors.white, backgroundColor: Colors.grey),
-                  CustomTableCell(text: 'P14', textColor: Colors.black, backgroundColor: Colors.amber),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P15', textColor: Colors.white, backgroundColor: Colors.lightGreen),
-                  CustomTableCell(text: 'P16', textColor: Colors.black, backgroundColor: Colors.deepOrange),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P17', textColor: Colors.white, backgroundColor: Colors.lightBlue),
-                  CustomTableCell(text: 'P18', textColor: Colors.black, backgroundColor: Colors.deepPurple),
-                ],
-              ),
-              TableRow(
-                children: [
-                  CustomTableCell(text: 'P19', textColor: Colors.white, backgroundColor: Colors.blueGrey),
-                  CustomTableCell(text: 'P20', textColor: Colors.black, backgroundColor: Colors.lightGreenAccent),
-                ],
-              ),
-            ],
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Flutter Dynamic Table'),
       ),
+      body: Center(
+        child: FutureBuilder<List<TableData>>(
+          future: tableData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            } else {
+              return buildTable(snapshot.data!);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget buildTable(List<TableData> data) {
+    return Table(
+      border: TableBorder.all(),
+      children: data.map((item) {
+        return TableRow(
+          children: [
+            CustomTableCell(text: item.leftCell, textColor: Colors.white, backgroundColor: item.leftCellColor),
+            CustomTableCell(text: item.rightCell, textColor: Colors.black, backgroundColor: item.rightCellColor),
+          ],
+        );
+      }).toList(),
     );
   }
 }
@@ -109,6 +90,29 @@ class CustomTableCell extends StatelessWidget {
         textAlign: TextAlign.center,
         style: TextStyle(color: textColor),
       ),
+    );
+  }
+}
+
+class TableData {
+  final String leftCell;
+  final String rightCell;
+  final Color leftCellColor;
+  final Color rightCellColor;
+
+  TableData({
+    required this.leftCell,
+    required this.rightCell,
+    required this.leftCellColor,
+    required this.rightCellColor,
+  });
+
+  factory TableData.fromJson(Map<String, dynamic> json) {
+    return TableData(
+      leftCell: json['leftCell'],
+      rightCell: json['rightCell'],
+      leftCellColor: Color(int.parse(json['leftCellColor'].substring(1, 7), radix: 16) + 0xFF000000),
+      rightCellColor: Color(int.parse(json['rightCellColor'].substring(1, 7), radix: 16) + 0xFF000000),
     );
   }
 }
