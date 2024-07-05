@@ -32,10 +32,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Flutter Dynamic Table'),
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      //   title: const Text('Flutter Dynamic Table'),
+      // ),
       body: Center(
         child: FutureBuilder<List<TableData>>(
           future: tableData,
@@ -54,16 +54,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildTable(List<TableData> data) {
-    return Table(
-      border: TableBorder.all(),
-      children: data.map((item) {
-        return TableRow(
-          children: [
-            CustomTableCell(text: item.leftCell, textColor: Colors.white, backgroundColor: item.leftCellColor),
-            CustomTableCell(text: item.rightCell, textColor: Colors.black, backgroundColor: item.rightCellColor),
-          ],
-        );
-      }).toList(),
+    return Padding(
+      padding: const EdgeInsets.all(16.0), // Padding um die Tabelle herum
+      child: Table(
+        border: const TableBorder(
+          horizontalInside: BorderSide(width: 2.0, color: Colors.black), // Horizontale Linien
+          verticalInside: BorderSide(width: 2.0, color: Colors.black), // Vertikale Linien
+        ),
+        children: data.map((item) {
+          return TableRow(
+            children: [
+              CustomTableCell(
+                  text: item.leftCell,
+                  textColor: Colors.black,
+                  backgroundColor: item.leftCellColor,
+                  height: 45,),
+              CustomTableCell(
+                  text: item.rightCell,
+                  textColor: Colors.black,
+                  backgroundColor: item.rightCellColor,
+                  height: 45,)
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -72,17 +86,20 @@ class CustomTableCell extends StatelessWidget {
   final String text;
   final Color textColor;
   final Color backgroundColor;
+  final double height;
 
   const CustomTableCell({
     super.key,
     required this.text,
     required this.textColor,
     required this.backgroundColor,
+    required this.height,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: height,
       padding: const EdgeInsets.all(8.0),
       color: backgroundColor,
       child: Text(
@@ -111,8 +128,16 @@ class TableData {
     return TableData(
       leftCell: json['leftCell'],
       rightCell: json['rightCell'],
-      leftCellColor: Color(int.parse(json['leftCellColor'].substring(1, 7), radix: 16) + 0xFF000000),
-      rightCellColor: Color(int.parse(json['rightCellColor'].substring(1, 7), radix: 16) + 0xFF000000),
+      leftCellColor: _colorFromHex(json['leftCellColor']),
+      rightCellColor: _colorFromHex(json['rightCellColor']),
     );
+  }
+
+  static Color _colorFromHex(String hexColor) {
+    hexColor = hexColor.toUpperCase().replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF$hexColor';
+    }
+    return Color(int.parse(hexColor, radix: 16));
   }
 }
