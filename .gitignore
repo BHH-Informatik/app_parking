@@ -9,6 +9,7 @@
 .history
 .svn/
 migrate_working_dir/
+mobile_parking/pubspec.lock
 
 # IntelliJ related
 *.iml
