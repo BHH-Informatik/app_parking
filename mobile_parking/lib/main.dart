@@ -65,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.list_alt),
-            label: 'Plan',
+            label: 'Buchungen',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month),
