@@ -61,23 +61,23 @@ class _MyHomePageState extends State<MyHomePage> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.local_parking),
-            label: '',
+            label: 'Parken',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.list_alt),
-            label: 'Page 1',
+            label: 'Plan',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month),
-            label: 'Page 2',
+            label: 'Kalender',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
-            label: 'Page 3',
+            label: 'Kontakt',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Page 4',
+            label: 'Einstellungen',
           ),
         ],
         currentIndex: _selectedIndex,
