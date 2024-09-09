@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'model/parking_lot.dart';
+import 'model/parking_lot_status.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,35 +12,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<List<TableData>> tableData;
+  late Future<List<ParkingLot>> parkingLots;
 
   @override
   void initState() {
     super.initState();
-    tableData = fetchTableData();
+    parkingLots = fetchParkingLots();
   }
 
-  Future<List<TableData>> fetchTableData() async {
+  // Fetch Parking Lots from API
+  Future<List<ParkingLot>> fetchParkingLots() async {
     final response = await http.get(Uri.parse('https://kapanke.net/capstone/table'));
 
     if (response.statusCode == 200) {
-      List jsonResponse = json.decode(response.body);
-      return jsonResponse.map((data) => TableData.fromJson(data)).toList();
+      List<dynamic> jsonResponse = json.decode(response.body)['parking_lots'];
+      return jsonResponse.map((data) => ParkingLot.fromJson(data)).toList();
     } else {
-      throw Exception('Failed to load data');
+      throw Exception('Failed to load parking lots');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      //   title: const Text('Flutter Dynamic Table'),
-      // ),
       body: Center(
-        child: FutureBuilder<List<TableData>>(
-          future: tableData,
+        child: FutureBuilder<List<ParkingLot>>(
+          future: parkingLots,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const CircularProgressIndicator();
@@ -53,91 +52,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildTable(List<TableData> data) {
+  // Dynamische Tabelle basierend auf den API-Daten
+  Widget buildTable(List<ParkingLot> data) {
+    // Gruppiere die ParkingLots zu Zeilenpaaren, um zwei Namen nebeneinander anzuzeigen
+    List<TableRow> rows = [];
+    for (int i = 0; i < data.length; i += 2) {
+      rows.add(TableRow(
+        children: [
+          // Erster Name in der Reihe
+          buildParkingLotCell(data[i]),
+          // Zweiter Name in der Reihe, falls vorhanden
+          if (i + 1 < data.length) buildParkingLotCell(data[i + 1]) else Container(),
+        ],
+      ));
+    }
+
     return Padding(
-      padding: const EdgeInsets.all(16.0), // Padding um die Tabelle herum
+      padding: const EdgeInsets.all(16.0),
       child: Table(
         border: const TableBorder(
-          horizontalInside: BorderSide(width: 2.0, color: Colors.black), // Horizontale Linien
-          verticalInside: BorderSide(width: 2.0, color: Colors.black), // Vertikale Linien
+          horizontalInside: BorderSide(width: 2.5, color: Colors.black45),
+          verticalInside: BorderSide(width: 2.5, color: Colors.black45),
         ),
-        children: data.map((item) {
-          return TableRow(
-            children: [
-              CustomTableCell(
-                  text: item.leftCell,
-                  textColor: Colors.black,
-                  backgroundColor: item.leftCellColor,
-                  height: 45,),
-              CustomTableCell(
-                  text: item.rightCell,
-                  textColor: Colors.black,
-                  backgroundColor: item.rightCellColor,
-                  height: 45,)
-            ],
-          );
-        }).toList(),
+        children: rows,
       ),
     );
   }
-}
 
-class CustomTableCell extends StatelessWidget {
-  final String text;
-  final Color textColor;
-  final Color backgroundColor;
-  final double height;
-
-  const CustomTableCell({
-    super.key,
-    required this.text,
-    required this.textColor,
-    required this.backgroundColor,
-    required this.height,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
+  // Einzelne Zelle für einen Parkplatz
+  Widget buildParkingLotCell(ParkingLot parkingLot) {
+    return Padding(
       padding: const EdgeInsets.all(8.0),
-      color: backgroundColor,
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(color: textColor),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+          decoration: BoxDecoration(
+            color: parkingLot.status.color, // Hintergrundfarbe passend zum Status
+            borderRadius: BorderRadius.circular(8.0), //  Ecken rund machen
+          ),
+          child: Text(
+            parkingLot.name,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: parkingLot.status.textColor,  // Textfarbe basierend auf Status
+            ),
+          ),
+        ),
       ),
     );
-  }
-}
-
-class TableData {
-  final String leftCell;
-  final String rightCell;
-  final Color leftCellColor;
-  final Color rightCellColor;
-
-  TableData({
-    required this.leftCell,
-    required this.rightCell,
-    required this.leftCellColor,
-    required this.rightCellColor,
-  });
-
-  factory TableData.fromJson(Map<String, dynamic> json) {
-    return TableData(
-      leftCell: json['leftCell'],
-      rightCell: json['rightCell'],
-      leftCellColor: _colorFromHex(json['leftCellColor']),
-      rightCellColor: _colorFromHex(json['rightCellColor']),
-    );
-  }
-
-  static Color _colorFromHex(String hexColor) {
-    hexColor = hexColor.toUpperCase().replaceAll('#', '');
-    if (hexColor.length == 6) {
-      hexColor = 'FF$hexColor';
-    }
-    return Color(int.parse(hexColor, radix: 16));
   }
 }
