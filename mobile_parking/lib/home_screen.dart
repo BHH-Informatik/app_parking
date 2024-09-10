@@ -79,24 +79,53 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Einzelne Zelle für einen Parkplatz
+  // Einzelne Zelle für einen Parkplatz, anklickbar gemacht mit InkWell
   Widget buildParkingLotCell(ParkingLot parkingLot) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-          decoration: BoxDecoration(
-            color: parkingLot.status.color, // Hintergrundfarbe passend zum Status
-            borderRadius: BorderRadius.circular(8.0), //  Ecken rund machen
-          ),
-          child: Text(
-            parkingLot.name,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: parkingLot.status.textColor,  // Textfarbe basierend auf Status
+    return InkWell(
+      onTap: () {
+        // Wenn eine Zelle angeklickt wird, zeige einen Dialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Parkplatz Buchen'),
+              content: Text('Möchten Sie den Parkplatz "${parkingLot.name}" buchen?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Abbrechen'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Hier könnte der Buchungsvorgang gestartet werden
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Buchen'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            decoration: BoxDecoration(
+              color: parkingLot.status.color, // Hintergrundfarbe passend zum Status
+              borderRadius: BorderRadius.circular(8.0), // Ecken rund machen
+            ),
+            child: Text(
+              parkingLot.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: parkingLot.status.textColor, // Textfarbe basierend auf Status
+              ),
             ),
           ),
         ),
