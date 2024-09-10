@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'model/parking_lot.dart';
 import 'model/parking_lot_status.dart';
+import 'ui/booking_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -79,25 +80,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Einzelne Zelle für einen Parkplatz, anklickbar gemacht mit InkWell
+  // Einzelne Zelle für einen Parkplatz, nur aktiv, wenn der Status "Free" ist
   Widget buildParkingLotCell(ParkingLot parkingLot) {
+    bool isFree = parkingLot.status == ParkingLotStatus.free;
+
     return InkWell(
-      onTap: () {
-        // Wenn eine Zelle angeklickt wird, zeige einen Dialog
+      onTap: isFree
+          ? () {
+        // Wenn der Parkplatz "Free" ist, zeige den Buchungsdialog an
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return BookingDialog(parkingLot: parkingLot);
           },
         );
-      },
+      }
+          : null, // Kein onTap, wenn der Parkplatz nicht "Free" ist
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
             decoration: BoxDecoration(
-              color: parkingLot.status.color, // Hintergrundfarbe passend zum Status
+              color: parkingLot.status.color, // .withOpacity(isFree ? 1.0 : 0.5), // Grauer, wenn nicht "Free"
               borderRadius: BorderRadius.circular(8.0), // Ecken rund machen
             ),
             child: Text(
@@ -106,115 +111,12 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: parkingLot.status.textColor, // Textfarbe basierend auf Status
+                color: parkingLot.status.textColor, //.withOpacity(isFree ? 1.0 : 0.5), // Grauer Text, wenn nicht "Free"
               ),
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-// Dialog zum Buchen eines Parkplatzes
-class BookingDialog extends StatefulWidget {
-  final ParkingLot parkingLot;
-
-  const BookingDialog({super.key, required this.parkingLot});
-
-  @override
-  _BookingDialogState createState() => _BookingDialogState();
-}
-
-class _BookingDialogState extends State<BookingDialog> {
-  bool _isAllDay = true;
-  String? _selectedStartTime;
-  String? _selectedEndTime;
-
-  // Beispiel-Zeiten, könnte durch dynamische Zeitwerte ersetzt werden
-  final List<String> _times = ['08:00', '09:00', '10:00', '11:00', '12:00',
-    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Parkplatz Buchen - ${widget.parkingLot.name}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Checkbox für "ganztägig buchen"
-          Row(
-            children: [
-              Checkbox(
-                value: _isAllDay,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _isAllDay = value ?? false;
-                  });
-                },
-              ),
-              const Text('Ganztägig buchen'),
-            ],
-          ),
-          if (!_isAllDay)
-            Column(
-              children: [
-                // Dropdown für Startzeit
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(labelText: 'Startzeit'),
-                  value: _selectedStartTime,
-                  items: _times.map((time) {
-                    return DropdownMenuItem<String>(
-                      value: time,
-                      child: Text(time),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedStartTime = newValue;
-                    });
-                  },
-                ),
-                // Dropdown für Endzeit
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(labelText: 'Endzeit'),
-                  value: _selectedEndTime,
-                  items: _times.map((time) {
-                    return DropdownMenuItem<String>(
-                      value: time,
-                      child: Text(time),
-                    );
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedEndTime = newValue;
-                    });
-                  },
-                ),
-              ],
-            ),
-        ],
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Abbrechen'),
-        ),
-        TextButton(
-          onPressed: () {
-            // Hier könnte der Buchungsvorgang gestartet werden
-            if (_isAllDay) {
-              print('Ganztägig gebucht: ${widget.parkingLot.name}');
-            } else {
-              print('Gebucht: ${widget.parkingLot.name} von $_selectedStartTime bis $_selectedEndTime');
-            }
-            Navigator.of(context).pop();
-          },
-          child: const Text('Buchen'),
-        ),
-      ],
     );
   }
 }
