@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'model/parking_lot.dart';
 import 'model/parking_lot_status.dart';
+import 'ui/booking_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -79,24 +80,39 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Einzelne Zelle für einen Parkplatz
+  // Einzelne Zelle für einen Parkplatz, nur aktiv, wenn der Status "Free" ist
   Widget buildParkingLotCell(ParkingLot parkingLot) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-          decoration: BoxDecoration(
-            color: parkingLot.status.color, // Hintergrundfarbe passend zum Status
-            borderRadius: BorderRadius.circular(8.0), //  Ecken rund machen
-          ),
-          child: Text(
-            parkingLot.name,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: parkingLot.status.textColor,  // Textfarbe basierend auf Status
+    bool isFree = parkingLot.status == ParkingLotStatus.free;
+
+    return InkWell(
+      onTap: isFree
+          ? () {
+        // Wenn der Parkplatz "Free" ist, zeige den Buchungsdialog an
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return BookingDialog(parkingLot: parkingLot);
+          },
+        );
+      }
+          : null, // Kein onTap, wenn der Parkplatz nicht "Free" ist
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            decoration: BoxDecoration(
+              color: parkingLot.status.color, // .withOpacity(isFree ? 1.0 : 0.5), // Grauer, wenn nicht "Free"
+              borderRadius: BorderRadius.circular(8.0), // Ecken rund machen
+            ),
+            child: Text(
+              parkingLot.name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: parkingLot.status.textColor, //.withOpacity(isFree ? 1.0 : 0.5), // Grauer Text, wenn nicht "Free"
+              ),
             ),
           ),
         ),

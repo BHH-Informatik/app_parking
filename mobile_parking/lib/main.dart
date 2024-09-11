@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'page1.dart';
 import 'page2.dart';
 import 'page3.dart';
 import 'page4.dart';
+import 'login_screen.dart'; // Importiere den Login-Screen
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +22,52 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: const SplashScreen(), // Starte mit dem SplashScreen
+    );
+  }
+}
+
+// SplashScreen prüft den Login-Status
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  // Prüfe, ob der Benutzer eingeloggt ist oder den Login übersprungen hat
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool? isLoggedIn = prefs.getBool('isLoggedIn');
+
+    if (isLoggedIn != null && isLoggedIn) {
+      // Weiterleiten zur Hauptseite, wenn eingeloggt
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MyHomePage()),
+      );
+    } else {
+      // Weiterleiten zum Login-Screen, wenn nicht eingeloggt
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),  // Ladeanzeige
+      ),
     );
   }
 }
