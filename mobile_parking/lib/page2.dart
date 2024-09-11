@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+// Buchungen Seite
 class Page2 extends StatefulWidget {
   const Page2({super.key});
 

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 import 'main.dart'; // Importiere MyHomePage für den Fall, dass der Benutzer sich ausloggt
 
+// Einstellungen Seite
 class Page4 extends StatefulWidget {
   const Page4({super.key});
 

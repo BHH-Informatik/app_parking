@@ -5,6 +5,7 @@ import 'model/parking_lot.dart';
 import 'model/parking_lot_status.dart';
 import 'ui/booking_dialog.dart';
 
+// HomeScreen
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
