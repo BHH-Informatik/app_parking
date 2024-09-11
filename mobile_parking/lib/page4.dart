@@ -1,18 +1,128 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'login_screen.dart';
+import 'main.dart'; // Importiere MyHomePage für den Fall, dass der Benutzer sich ausloggt
 
-class Page4 extends StatelessWidget {
+class Page4 extends StatefulWidget {
   const Page4({super.key});
+
+  @override
+  _Page4State createState() => _Page4State();
+}
+
+class _Page4State extends State<Page4> {
+  bool _isDarkMode = false; // Für den Dark Mode Switch
+  bool _isLoggedIn = false; // Login-Status
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // Prüfe, ob der Benutzer eingeloggt ist
+  }
+
+  // Prüfe den Login-Status mit shared_preferences
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    });
+  }
+
+  // Funktion zum Logout
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isLoggedIn');  // Entferne den Login-Status
+    await prefs.remove('access_token'); // Optional: Entferne auch den Access Token
+
+    // Leite zum Login-Screen weiter
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
+
+  // Funktion zum Account löschen (aktuell nur simuliert)
+  Future<void> _deleteAccount() async {
+    // Zeige einen Bestätigungsdialog
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Account löschen'),
+        content: const Text('Möchten Sie Ihren Account wirklich löschen?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Löschen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm ?? false) {
+      // Hier kannst du eine API-Anfrage hinzufügen, um den Account zu löschen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Account wurde gelöscht (simuliert).')),
+      );
+
+      // Nach dem Löschen: Leite den Benutzer zum Login-Screen weiter
+      await _logout();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const <Widget>[
-          Text(
-            'Page 4',
-            style: TextStyle(fontSize: 24),
+        children: [
+          // Dark Mode Switch
+          SwitchListTile(
+            title: const Text('Dark Mode'),
+            value: _isDarkMode,
+            onChanged: (value) {
+              setState(() {
+                _isDarkMode = value;
+              });
+              // Hier kannst du die Logik zum Aktivieren des Dark Modes hinzufügen
+            },
           ),
+          const SizedBox(height: 20),
+
+          // Zeige, ob der Benutzer eingeloggt ist
+          Text(
+            _isLoggedIn ? 'Sie sind eingeloggt.' : 'Sie sind nicht eingeloggt.',
+            style: const TextStyle(fontSize: 18),
+          ),
+          const SizedBox(height: 20),
+
+          // Login-/Logout-Button basierend auf dem Login-Status
+          _isLoggedIn
+              ? ElevatedButton(
+            onPressed: _logout,
+            child: const Text('Logout'),
+          )
+              : ElevatedButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            },
+            child: const Text('Login'),
+          ),
+          const SizedBox(height: 20),
+
+          // Account löschen Button
+          if (_isLoggedIn) // Nur anzeigen, wenn der Benutzer eingeloggt ist
+            ElevatedButton(
+              onPressed: _deleteAccount,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Account löschen'),
+            ),
         ],
       ),
     );
