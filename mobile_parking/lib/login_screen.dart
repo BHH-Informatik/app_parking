@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'main.dart'; // Importiere MyHomePage
 
 class LoginScreen extends StatefulWidget {
@@ -11,35 +12,73 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;  // Zeigt den Ladezustand an
 
   // Funktion zum Speichern des Login-Status
-  Future<void> _saveLoginStatus(bool isLoggedIn) async {
+  Future<void> _saveLoginStatus(bool isLoggedIn, String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', isLoggedIn);
+    await prefs.setString('access_token', token);  // Speichere den Access Token
   }
 
-  // Funktion zum Überspringen des Logins
-  Future<void> _skipLogin() async {
-    await _saveLoginStatus(true);  // Speichere, dass der Login übersprungen wurde
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const MyHomePage()), // Navigiere zur MyHomePage
-    );
-  }
-
-  // Funktion zum Simulieren eines Logins
+  // Funktion zum tatsächlichen Login
   Future<void> _login() async {
-    // Simuliere hier die Login-Logik (API-Aufruf oder ähnliches)
-    if (_usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-      await _saveLoginStatus(true);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MyHomePage()), // Navigiere zur MyHomePage
-      );
-    } else {
-      // Zeige eine Fehlermeldung
+    setState(() {
+      _isLoading = true;  // Ladeanzeige aktivieren
+    });
+
+    final email = _usernameController.text;
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte Benutzername und Passwort eingeben')),
+        const SnackBar(content: Text('Bitte E-Mail und Passwort eingeben')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse("https://parking.enten.dev/api/auth/login"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final accessToken = data['access_token'];
+
+        // Speichere den Login-Status und den Access Token
+        await _saveLoginStatus(true, accessToken);
+
+        // Leite zur Hauptseite weiter
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MyHomePage()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login fehlgeschlagen. Bitte überprüfe deine Anmeldedaten.')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ein Fehler ist aufgetreten.')),
       );
     }
   }
@@ -57,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Benutzername'),
+              decoration: const InputDecoration(labelText: 'E-Mail'),
             ),
             TextField(
               controller: _passwordController,
@@ -65,13 +104,20 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
+            _isLoading
+                ? const CircularProgressIndicator()  // Ladeanzeige während des Logins
+                : ElevatedButton(
               onPressed: _login,
-              child: const Text('Login'),
+              child: const Text('Anmelden'),
             ),
             const SizedBox(height: 20),
             TextButton(
-              onPressed: _skipLogin,
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MyHomePage()),
+                );
+              },
               child: const Text('Skip'),
             ),
           ],
