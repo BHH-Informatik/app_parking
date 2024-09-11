@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 import 'model/feedback.dart';
 
 // Kontakt Seite
-class Page3 extends StatefulWidget {
-  const Page3({super.key});
-
-  @override
-  State<Page3> createState() => _HomeState();
-}
 
 class FeedbackList extends StatefulWidget {
   const FeedbackList({required this.feedback, super.key});
@@ -58,6 +52,13 @@ class _FeedbackListState extends State<FeedbackList> {
   }
 }
 
+class Page3 extends StatefulWidget {
+  const Page3({super.key});
+
+  @override
+  State<Page3> createState() => _HomeState();
+}
+
 class _HomeState extends State<Page3> {
   final _formGlobalKey = GlobalKey<FormState>();
 
@@ -81,7 +82,7 @@ class _HomeState extends State<Page3> {
         backgroundColor: Colors.grey[200],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         child: Column(
           children: [
             Expanded(child: FeedbackList(feedback: feedback)),
@@ -107,12 +108,12 @@ class _HomeState extends State<Page3> {
 
                   // Feedback Beschreibung
                   TextFormField(
-                      maxLength: 40,
+                      maxLength: 90,
                       decoration: const InputDecoration(
                           label: Text('Feedback Beschreibung')),
                       validator: (v) {
-                        if (v == null || v.isEmpty || v.length < 5) {
-                          return 'Gib eine Beschreibung, die länger als 5 Zeichen lang ist ein.';
+                        if (v == null || v.isEmpty || v.length < 10) {
+                          return 'Gib eine Beschreibung, die länger als 10 Zeichen lang ist ein.';
                         }
                         return null;
                       },
@@ -135,14 +136,14 @@ class _HomeState extends State<Page3> {
                     },
                   ),
 
-                  // submit button
+                  // Button
                   const SizedBox(height: 20),
                   FilledButton(
                     onPressed: () {
                       if (_formGlobalKey.currentState!.validate()) {
                         _formGlobalKey.currentState!.save();
 
-                        // add new feedback
+                        // Hinzufügen 
                         setState(() {
                           feedback.add(Feedbacks(
                               title: _title,
@@ -155,12 +156,12 @@ class _HomeState extends State<Page3> {
                       }
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.grey[800],
+                      backgroundColor: Color(0xFF424242),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    child: const Text('Add'),
+                    child: const Text('jjjhjj'),
                   )
                 ],
               ),
