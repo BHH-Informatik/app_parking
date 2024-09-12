@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 enum FeedbackTyp {
-  delete(color: Colors.red, title: 'Löschung'),
-  broken(color: Colors.orange, title: 'Defekt'),
-  wish(color: Colors.amber, title: 'Feature'),
+  delete(color: Color.fromARGB(255, 252, 108, 92), title: 'Löschung'),
+  broken(color: Color.fromARGB(255,255,204, 151) , title: 'Defekt'),
   other(color: Colors.green, title: 'Anderweitig');
 
   const FeedbackTyp({ required this.color, required this.title });

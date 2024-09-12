@@ -1,65 +1,18 @@
 import 'package:flutter/material.dart';
 import 'model/feedback.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 // Kontakt Seite
-
-class FeedbackList extends StatefulWidget {
-  const FeedbackList({required this.feedback, super.key});
-
-  final List<Feedbacks> feedback;
-
-  @override
-  State<FeedbackList> createState() => _FeedbackListState();
-}
-
-class _FeedbackListState extends State<FeedbackList> {
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: widget.feedback.length,
-        itemBuilder: (_, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: widget.feedback[index].feedbackType.color.withOpacity(0.5),
-                ),
-                padding: const EdgeInsets.only(left: 12),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(widget.feedback[index].title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            Text(widget.feedback[index].description),
-                          ]),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: widget.feedback[index].feedbackType.color,
-                        ),
-                        child: Text(widget.feedback[index].feedbackType.title),
-                      ),
-                    ])),
-          );
-        });
-  }
-}
-
 class Page3 extends StatefulWidget {
   const Page3({super.key});
 
   @override
-  State<Page3> createState() => _HomeState();
+  State<Page3> createState() => _Page3State();
 }
 
-class _HomeState extends State<Page3> {
+class _Page3State extends State<Page3> {
   final _formGlobalKey = GlobalKey<FormState>();
 
   FeedbackTyp _selectedPriority = FeedbackTyp.other;
@@ -67,10 +20,10 @@ class _HomeState extends State<Page3> {
   String _description = '';
 
   final List<Feedbacks> feedback = [
-    const Feedbacks(
-        title: ' Alles scheiße hier',
-        description: 'Parkplatz kaputt grrrr',
-        feedbackType: FeedbackTyp.broken),
+  //   const Feedbacks(
+  //       title: ' Alles blöd hier',
+  //       description: 'Parkplatz kaputt grrrr',
+  //       feedbackType: FeedbackTyp.broken),
   ];
 
   @override
@@ -142,7 +95,7 @@ class _HomeState extends State<Page3> {
                     onPressed: () {
                       if (_formGlobalKey.currentState!.validate()) {
                         _formGlobalKey.currentState!.save();
-
+                        
                         // Hinzufügen 
                         setState(() {
                           feedback.add(Feedbacks(
@@ -153,15 +106,15 @@ class _HomeState extends State<Page3> {
 
                         _formGlobalKey.currentState!.reset();
                         _selectedPriority = FeedbackTyp.other;
-                      }
+                      }   
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: Color(0xFF424242),
+                      backgroundColor: Color.fromARGB(255, 252, 108, 92),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    child: const Text('jjjhjj'),
+                    child: const Text('Hinzufügen'),
                   )
                 ],
               ),
@@ -170,5 +123,54 @@ class _HomeState extends State<Page3> {
         ),
       ),
     );
+  }
+}
+
+class FeedbackList extends StatefulWidget {
+  const FeedbackList({required this.feedback, super.key});
+
+  final List<Feedbacks> feedback;
+
+  @override
+  State<FeedbackList> createState() => _FeedbackListState();
+}
+
+class _FeedbackListState extends State<FeedbackList> {
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+        itemCount: widget.feedback.length,
+        itemBuilder: (_, index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: widget.feedback[index].feedbackType.color.withOpacity(0.7),
+                ),
+                padding: const EdgeInsets.only(left: 12),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(widget.feedback[index].title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                )),
+                            Text(widget.feedback[index].description),
+                          ]),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: widget.feedback[index].feedbackType.color,
+                        ),
+                        child: Text(widget.feedback[index].feedbackType.title),
+                      ),
+                    ])),
+          );
+        });
   }
 }
