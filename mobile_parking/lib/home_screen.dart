@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:intl/intl.dart'; // Um das Datum zu formatieren
 import 'model/parking_lot.dart';
 import 'model/parking_lot_status.dart';
 import 'ui/booking_dialog.dart';
+import 'service/api_service.dart'; // Importiere den API-Service
 
 // HomeScreen
 class HomeScreen extends StatefulWidget {
@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<ParkingLot>> parkingLots;
+  final ApiService apiService = ApiService(); // Initialisiere den API-Service
 
   @override
   void initState() {
@@ -22,16 +23,17 @@ class _HomeScreenState extends State<HomeScreen> {
     parkingLots = fetchParkingLots();
   }
 
-  // Fetch Parking Lots from API
+  // Hole die Parkplätze vom API-Service
   Future<List<ParkingLot>> fetchParkingLots() async {
-    final response = await http.get(Uri.parse('https://kapanke.net/capstone/table'));
+    // Hole das heutige Datum im Format YYYY-MM-DD
+    final DateTime now = DateTime.now();
+    final String formattedDate = DateFormat('yyyy-MM-dd').format(now);
 
-    if (response.statusCode == 200) {
-      List<dynamic> jsonResponse = json.decode(response.body)['parking_lots'];
-      return jsonResponse.map((data) => ParkingLot.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load parking lots');
-    }
+    // Verwende den ApiService, um die Daten zu laden
+    List<dynamic> parkingLotData = await apiService.fetchParkingLots(formattedDate);
+
+    // Mappe die Daten auf ParkingLot-Objekte
+    return parkingLotData.map((data) => ParkingLot.fromJson(data)).toList();
   }
 
   @override
@@ -56,14 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Dynamische Tabelle basierend auf den API-Daten
   Widget buildTable(List<ParkingLot> data) {
-    // Gruppiere die ParkingLots zu Zeilenpaaren, um zwei Namen nebeneinander anzuzeigen
     List<TableRow> rows = [];
     for (int i = 0; i < data.length; i += 2) {
       rows.add(TableRow(
         children: [
-          // Erster Name in der Reihe
           buildParkingLotCell(data[i]),
-          // Zweiter Name in der Reihe, falls vorhanden
           if (i + 1 < data.length) buildParkingLotCell(data[i + 1]) else Container(),
         ],
       ));
@@ -88,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return InkWell(
       onTap: isFree
           ? () {
-        // Wenn der Parkplatz "Free" ist, zeige den Buchungsdialog an
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -96,15 +94,15 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         );
       }
-          : null, // Kein onTap, wenn der Parkplatz nicht "Free" ist
+          : null,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
             decoration: BoxDecoration(
-              color: parkingLot.status.color, // .withOpacity(isFree ? 1.0 : 0.5), // Grauer, wenn nicht "Free"
-              borderRadius: BorderRadius.circular(8.0), // Ecken rund machen
+              color: parkingLot.status.color,
+              borderRadius: BorderRadius.circular(8.0),
             ),
             child: Text(
               parkingLot.name,
@@ -112,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: parkingLot.status.textColor, //.withOpacity(isFree ? 1.0 : 0.5), // Grauer Text, wenn nicht "Free"
+                color: parkingLot.status.textColor,
               ),
             ),
           ),
