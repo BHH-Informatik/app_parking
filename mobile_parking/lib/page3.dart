@@ -13,7 +13,6 @@ class Page3 extends StatefulWidget {
 }
 
 class _Page3State extends State<Page3> {
-  final _formGlobalKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
   bool _isSending = false;
@@ -55,10 +54,15 @@ class _Page3State extends State<Page3> {
           }
         )
       );
-
-
+    
       if (response.statusCode == 200){
-        final data = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ihr Feedback wurde gesendet.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Page3()),
+        );
 
       } else {
         setState(() {
