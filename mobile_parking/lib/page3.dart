@@ -59,10 +59,7 @@ class _Page3State extends State<Page3> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ihr Feedback wurde gesendet.')),
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Page3()),
-        );
+        Navigator.pushReplacementNamed(context, '/page3');
 
       } else {
         setState(() {
