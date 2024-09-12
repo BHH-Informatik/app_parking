@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'model/feedback.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -14,163 +14,101 @@ class Page3 extends StatefulWidget {
 
 class _Page3State extends State<Page3> {
   final _formGlobalKey = GlobalKey<FormState>();
+  final _subjectController = TextEditingController();
+  final _messageController = TextEditingController();
+  bool _isSending = false;
+  
+  //Funktion um Feedback zu Senden
+  Future<void> _sendFeedback() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('access_token');
+  
+    setState(() {
+      _isSending = true;
+    });
 
-  FeedbackTyp _selectedPriority = FeedbackTyp.other;
-  String _title = '';
-  String _description = '';
+    final subject = _subjectController.text;
+    final message = _messageController.text;
 
-  final List<Feedbacks> feedback = [
-  //   const Feedbacks(
-  //       title: ' Alles blöd hier',
-  //       description: 'Parkplatz kaputt grrrr',
-  //       feedbackType: FeedbackTyp.broken),
-  ];
+    if (subject.isEmpty || message.isEmpty) {
+      setState(() {
+        _isSending = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bitte Titel und Beschreibung eingeben'))
+      );
+      return;
+    }
 
-  @override
+    try{
+      final response = await http.post(
+        Uri.parse("https://parking.enten.dev/api/message/send"),
+        headers: {
+          "Authorization" : "Bearer $token",
+          "Content-Type" : "application/json",
+          "Accept" : "application/json",
+        },
+        body: jsonEncode(
+          {
+            "subject" : subject,
+            "message" : message
+          }
+        )
+      );
+
+
+      if (response.statusCode == 200){
+        final data = jsonDecode(response.body);
+
+      } else {
+        setState(() {
+          _isSending = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Senden des Feedbacks fehlgeschlagen. Bitte überprüfe deine Eingabe.')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isSending = false;
+      });
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ein Fehler ist aufgetreten.')),
+      );
+    }
+  }
+
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gesendete Anfragen'),
-        centerTitle: true,
-        backgroundColor: Colors.grey[200],
+        title: const Text('Feedback'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(child: FeedbackList(feedback: feedback)),
-            Form(
-              key: _formGlobalKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Feedback Titel
-                  TextFormField(
-                      maxLength: 20,
-                      decoration:
-                          const InputDecoration(label: Text('Feedback Titel')),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return 'Gib einen Titel ein.';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) {
-                        _title = value!;
-                      }),
-
-                  // Feedback Beschreibung
-                  TextFormField(
-                      maxLength: 90,
-                      decoration: const InputDecoration(
-                          label: Text('Feedback Beschreibung')),
-                      validator: (v) {
-                        if (v == null || v.isEmpty || v.length < 10) {
-                          return 'Gib eine Beschreibung, die länger als 10 Zeichen lang ist ein.';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) {
-                        _description = value!;
-                      }),
-
-                  // Feedback Typ
-                  DropdownButtonFormField(
-                    value: _selectedPriority,
-                    decoration:
-                        const InputDecoration(label: Text('Feedback Typ')),
-                    items: FeedbackTyp.values.map((p) {
-                      return DropdownMenuItem(value: p, child: Text(p.title));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedPriority = value!;
-                      });
-                    },
-                  ),
-
-                  // Button
-                  const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed: () {
-                      if (_formGlobalKey.currentState!.validate()) {
-                        _formGlobalKey.currentState!.save();
-                        
-                        // Hinzufügen 
-                        setState(() {
-                          feedback.add(Feedbacks(
-                              title: _title,
-                              description: _description,
-                              feedbackType: _selectedPriority));
-                        });
-
-                        _formGlobalKey.currentState!.reset();
-                        _selectedPriority = FeedbackTyp.other;
-                      }   
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Color.fromARGB(255, 252, 108, 92),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    child: const Text('Hinzufügen'),
-                  )
-                ],
-              ),
-            )
+            TextField(
+              controller: _subjectController,
+              decoration: const InputDecoration(labelText: 'Titel'),
+            ),
+            TextField(
+              controller: _messageController,
+              decoration: const InputDecoration(labelText: 'Beschreibung'),
+            ),
+            const SizedBox(height: 20),
+            _isSending
+                ? const CircularProgressIndicator()  // Ladeanzeige während des Senden
+                : ElevatedButton(
+              onPressed: _sendFeedback,
+              child: const Text('Senden'),
+            ),
           ],
         ),
       ),
     );
   }
-}
 
-class FeedbackList extends StatefulWidget {
-  const FeedbackList({required this.feedback, super.key});
-
-  final List<Feedbacks> feedback;
-
-  @override
-  State<FeedbackList> createState() => _FeedbackListState();
-}
-
-class _FeedbackListState extends State<FeedbackList> {
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: widget.feedback.length,
-        itemBuilder: (_, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
-                  color: widget.feedback[index].feedbackType.color.withOpacity(0.7),
-                ),
-                padding: const EdgeInsets.only(left: 12),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(widget.feedback[index].title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                )),
-                            Text(widget.feedback[index].description),
-                          ]),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: widget.feedback[index].feedbackType.color,
-                        ),
-                        child: Text(widget.feedback[index].feedbackType.title),
-                      ),
-                    ])),
-          );
-        });
-  }
 }
