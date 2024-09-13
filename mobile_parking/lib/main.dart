@@ -19,8 +19,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Bottom Navigation Bar',
       theme: ThemeData(
+        useMaterial3 : true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
       ),
       home: const SplashScreen(), // Starte mit dem SplashScreen
     );
