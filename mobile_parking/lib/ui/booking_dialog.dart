@@ -1,89 +1,120 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../model/parking_lot.dart';
+import '../service/api_service.dart';
 
 class BookingDialog extends StatefulWidget {
   final ParkingLot parkingLot;
+  final DateTime selectedDate;
+  final VoidCallback onBookingSuccess; // Callback, der nach einer erfolgreichen Buchung aufgerufen wird
 
-  const BookingDialog({super.key, required this.parkingLot});
+  const BookingDialog({
+    super.key,
+    required this.parkingLot,
+    required this.selectedDate,
+    required this.onBookingSuccess, // Füge den Callback hinzu
+  });
 
   @override
   _BookingDialogState createState() => _BookingDialogState();
 }
 
 class _BookingDialogState extends State<BookingDialog> {
-  bool _isAllDay = true;  // Checkbox ist standardmäßig aktiviert
-  TimeOfDay? _selectedStartTime;
-  TimeOfDay? _selectedEndTime;
+  final ApiService apiService = ApiService();
+  bool _isAllDay = true;
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
+  bool _isLoading = false;
+
+  // Funktion zum Buchen des Parkplatzes
+  Future<void> _bookParkingLot() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final String bookingDate = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
+
+    try {
+      await apiService.bookParkingLot(
+        parkingLotId: widget.parkingLot.id,
+        bookingDate: bookingDate,
+        startTime: !_isAllDay && _startTime != null ? _startTime!.format(context) : null,
+        endTime: !_isAllDay && _endTime != null ? _endTime!.format(context) : null,
+      );
+
+      // Erfolgsmeldung anzeigen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Parkplatz erfolgreich gebucht!')),
+      );
+
+      // Schließe den Dialog und rufe den Callback auf, um die Daten neu zu laden
+      widget.onBookingSuccess(); // Rufe den Callback auf
+      Navigator.of(context).pop();
+    } catch (e) {
+      // Fehlermeldung anzeigen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fehler bei der Buchung des Parkplatzes')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Parkplatz Buchen - ${widget.parkingLot.name}'),
+      title: Text('Parkplatz ${widget.parkingLot.name} buchen'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Checkbox für "ganztägig buchen"
           Row(
             children: [
               Checkbox(
                 value: _isAllDay,
                 onChanged: (bool? value) {
                   setState(() {
-                    _isAllDay = value ?? false;
+                    _isAllDay = value ?? true;
                   });
                 },
               ),
               const Text('Ganztägig buchen'),
             ],
           ),
-          if (!_isAllDay)
-            Column(
-              children: [
-                // Button für Startzeit auswählen
-                ElevatedButton(
-                  onPressed: () {
-                    _selectTime(context, isStartTime: true);
-                  },
-                  child: Text(_selectedStartTime != null
-                      ? 'Startzeit: ${_selectedStartTime!.format(context)}'
-                      : 'Startzeit auswählen'),
-                ),
-                const SizedBox(height: 8),
-                // Button für Endzeit auswählen
-                ElevatedButton(
-                  onPressed: () {
-                    _selectTime(context, isStartTime: false);
-                  },
-                  child: Text(_selectedEndTime != null
-                      ? 'Endzeit: ${_selectedEndTime!.format(context)}'
-                      : 'Endzeit auswählen'),
-                ),
-              ],
+          if (!_isAllDay) ...[
+            ElevatedButton(
+              onPressed: () => _selectTime(context, isStartTime: true),
+              child: Text(_startTime != null
+                  ? 'Startzeit: ${_startTime!.format(context)}'
+                  : 'Startzeit auswählen'),
             ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () => _selectTime(context, isStartTime: false),
+              child: Text(_endTime != null
+                  ? 'Endzeit: ${_endTime!.format(context)}'
+                  : 'Endzeit auswählen'),
+            ),
+          ],
         ],
       ),
-      actions: <Widget>[
+      actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        TextButton(
-          onPressed: () {
-            if (_isAllDay) {
-              print('Ganztägig gebucht: ${widget.parkingLot.name}');
-            } else {
-              print('Gebucht: ${widget.parkingLot.name} von ${_selectedStartTime?.format(context)} bis ${_selectedEndTime?.format(context)}');
-            }
-            Navigator.of(context).pop();
-          },
-          child: const Text('Buchen'),
-        ),
+        if (!_isLoading)
+          ElevatedButton(
+            onPressed: _bookParkingLot,
+            child: const Text('Buchen'),
+          ),
+        if (_isLoading) const CircularProgressIndicator(),
       ],
     );
   }
 
+  // Funktion zum Auswählen der Zeit
   Future<void> _selectTime(BuildContext context, {required bool isStartTime}) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -92,9 +123,9 @@ class _BookingDialogState extends State<BookingDialog> {
     if (picked != null) {
       setState(() {
         if (isStartTime) {
-          _selectedStartTime = picked;
+          _startTime = picked;
         } else {
-          _selectedEndTime = picked;
+          _endTime = picked;
         }
       });
     }

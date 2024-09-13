@@ -29,11 +29,11 @@ extension ParkingLotStatusExtension on ParkingLotStatus {
       case ParkingLotStatus.free:
         return Colors.blue.shade100;
       case ParkingLotStatus.fullDayBlocked:
-        return Colors.red.shade300;
+        return Colors.red.shade200;
       case ParkingLotStatus.timeRangeBlocked:
-        return Colors.orange.shade300;
+        return Colors.orange.shade200;
       case ParkingLotStatus.blockedByUser:
-        return Colors.cyan.shade700;
+        return Colors.cyan.shade600;
       case ParkingLotStatus.unknown:
       default:
         return Colors.grey.shade100;

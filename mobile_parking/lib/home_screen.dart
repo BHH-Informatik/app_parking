@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Für die Datumformatierung
-import 'model/parking_lot.dart';
-import 'model/parking_lot_status.dart';
-import 'ui/booking_dialog.dart';
-import 'service/api_service.dart'; // Importiere den API-Service
+import '../model/parking_lot.dart';
+import '../model/parking_lot_status.dart';
+import '../ui/booking_dialog.dart'; // Korrektes Import für den BookingDialog im ui Ordner
+import '../service/api_service.dart'; // Importiere den API-Service
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -52,24 +52,21 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Obere Leiste mit Datum und Pfeilen
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Kleineres Padding
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Linker Pfeil (einen Tag zurück)
                 IconButton(
                   icon: const Icon(Icons.arrow_left),
-                  onPressed: () => _changeDate(-1), // Einen Tag zurück
+                  onPressed: () => _changeDate(-1),
                 ),
-                // Aktuelles Datum in der Mitte
                 Text(
                   DateFormat('dd.MM.yyyy').format(_selectedDate),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                // Rechter Pfeil (einen Tag vor)
                 IconButton(
                   icon: const Icon(Icons.arrow_right),
-                  onPressed: () => _changeDate(1), // Einen Tag vor
+                  onPressed: () => _changeDate(1),
                 ),
               ],
             ),
@@ -123,18 +120,33 @@ class _HomeScreenState extends State<HomeScreen> {
   // Einzelne Zelle für einen Parkplatz, nur aktiv, wenn der Status "Free" ist
   Widget buildParkingLotCell(ParkingLot parkingLot) {
     bool isFree = parkingLot.status == ParkingLotStatus.free;
+    bool isBlockedByUser = parkingLot.status == ParkingLotStatus.blockedByUser;
+    bool isTimeRangeBlocked = parkingLot.status == ParkingLotStatus.timeRangeBlocked;
 
     return InkWell(
-      onTap: isFree
+      onTap: (isFree || isBlockedByUser || isTimeRangeBlocked)
           ? () {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return BookingDialog(parkingLot: parkingLot);
-          },
-        );
+        if (isFree) {
+          // Bei Status "Free" öffne den Buchungsdialog
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return BookingDialog(
+                parkingLot: parkingLot,
+                selectedDate: _selectedDate,
+                onBookingSuccess: _fetchParkingLots, // Callback zur Aktualisierung nach Buchung
+              );
+            },
+          );
+        } else if (isBlockedByUser) {
+          // Zeige dem Benutzer, dass er den Parkplatz selbst gebucht hat
+          _showBookingInfo(parkingLot);
+        } else if (isTimeRangeBlocked) {
+          // Zeige die geblockten Zeiten an
+          _showBlockedTimes(parkingLot);
+        }
       }
-          : null,
+          : null, // Kein onTap, wenn der Status "fullDayBlocked" oder "unknown" ist
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
@@ -145,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Text(
-              parkingLot.name,
+              parkingLot.name, // Nur der Name des Parkplatzes in der Zelle
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -156,6 +168,56 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // Zeigt einen Dialog an, der die Buchungsinformationen des Benutzers anzeigt
+  void _showBookingInfo(ParkingLot parkingLot) {
+    String bookingInfo = 'Sie haben diesen Parkplatz von ${parkingLot.startTime} bis ${parkingLot.endTime} gebucht.';
+
+    if (parkingLot.startTime == null && parkingLot.endTime == null) {
+      bookingInfo = 'Sie haben diesen Parkplatz ganztägig gebucht.';
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Eigene Buchung'),
+          content: Text(bookingInfo),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Zeigt einen Dialog an, der die geblockten Zeiträume anzeigt
+  void _showBlockedTimes(ParkingLot parkingLot) {
+    String blockedInfo = 'Dieser Parkplatz ist von ${parkingLot.startTime} bis ${parkingLot.endTime} blockiert.';
+
+    if (parkingLot.startTime == null && parkingLot.endTime == null) {
+      blockedInfo = 'Dieser Parkplatz ist ganztägig blockiert.';
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Parkplatz blockiert'),
+          content: Text(blockedInfo),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
