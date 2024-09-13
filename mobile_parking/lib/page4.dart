@@ -12,7 +12,8 @@ class Page4 extends StatefulWidget {
 }
 
 class _Page4State extends State<Page4> {
-  bool _isDarkMode = false; // Für den Dark Mode Switch
+  // bool _isDarkMode = false; // Für den Dark Mode Switch
+  ThemeMode themeMode = ThemeMode.system;
   bool _isLoggedIn = false; // Login-Status
 
   @override
@@ -32,8 +33,9 @@ class _Page4State extends State<Page4> {
   // Funktion zum Logout
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('isLoggedIn');  // Entferne den Login-Status
-    await prefs.remove('access_token'); // Optional: Entferne auch den Access Token
+    await prefs.remove('isLoggedIn'); // Entferne den Login-Status
+    await prefs
+        .remove('access_token'); // Optional: Entferne auch den Access Token
 
     // Leite zum Login-Screen weiter
     Navigator.pushReplacement(
@@ -74,23 +76,45 @@ class _Page4State extends State<Page4> {
     }
   }
 
+  Future<void> _toggleTheme(bool isDarkMode) async {
+     final prefs = await SharedPreferences.getInstance();
+     bool _isDarkMode = false;
+     await prefs.setBool('isDarkMode', _isDarkMode);
+
+     setState(() {
+       _isDarkMode = isDarkMode;
+     });
+  }
+
+Future<void> _saveLoginStatus(bool isLoggedIn, String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', isLoggedIn);
+    await prefs.setString('access_token', token);  // Speichere den Access Token
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Dark Mode Switch
-          SwitchListTile(
-            title: const Text('Dark Mode'),
-            value: _isDarkMode,
-            onChanged: (value) {
-              setState(() {
-                _isDarkMode = value;
-              });
-              // Hier kannst du die Logik zum Aktivieren des Dark Modes hinzufügen
-            },
-          ),
+        children: <Widget>[
+            const Text(
+              'Choose your theme:',
+              style: TextStyle(fontSize: 18),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                /// Change theme & rebuild to show it using these buttons 
+                ElevatedButton(
+                    onPressed: () => MyApp.of(context).changeTheme(ThemeMode.light),
+                    child: const Text('Light')),
+                ElevatedButton(
+                    onPressed: () => MyApp.of(context).changeTheme(ThemeMode.dark),
+                    child: const Text('Dark')),
+              ],
+            ),
           const SizedBox(height: 20),
 
           // Zeige, ob der Benutzer eingeloggt ist
@@ -103,18 +127,18 @@ class _Page4State extends State<Page4> {
           // Login-/Logout-Button basierend auf dem Login-Status
           _isLoggedIn
               ? ElevatedButton(
-            onPressed: _logout,
-            child: const Text('Logout'),
-          )
+                  onPressed: _logout,
+                  child: const Text('Logout'),
+                )
               : ElevatedButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginScreen()),
-              );
-            },
-            child: const Text('Login'),
-          ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  },
+                  child: const Text('Login'),
+                ),
           const SizedBox(height: 20),
 
           // Account löschen Button
