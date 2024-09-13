@@ -16,10 +16,17 @@ class ParkingLot {
 
   // Konvertiert JSON zu einem ParkingLot-Objekt
   factory ParkingLot.fromJson(Map<String, dynamic> json) {
-    return ParkingLot(
+    var status = ParkingLotStatusExtension.fromString(json['status']);
+    if (json['extras'].length > 0) {
+      if (json['extras']['blocked_by_user'] == true) {
+        status = ParkingLotStatus.blockedByUser;
+      }
+    }
+    var parkingLot = ParkingLot(
       id: json['id'],
       name: json['name'],
-      status: ParkingLotStatusExtension.fromString(json['status']),
+      status: status,
     );
+    return parkingLot;
   }
 }

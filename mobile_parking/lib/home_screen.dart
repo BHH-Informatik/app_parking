@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Um das Datum zu formatieren
+import 'package:intl/intl.dart'; // Für die Datumformatierung
 import 'model/parking_lot.dart';
 import 'model/parking_lot_status.dart';
 import 'ui/booking_dialog.dart';
@@ -16,42 +16,83 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<ParkingLot>> parkingLots;
   final ApiService apiService = ApiService(); // Initialisiere den API-Service
+  DateTime _selectedDate = DateTime.now(); // Aktuelles Datum
 
   @override
   void initState() {
     super.initState();
-    parkingLots = fetchParkingLots();
+    _fetchParkingLots();
   }
 
-  // Hole die Parkplätze vom API-Service
+  // Funktion zum Abrufen der Parkplätze für das ausgewählte Datum
+  void _fetchParkingLots() {
+    setState(() {
+      parkingLots = fetchParkingLots();
+    });
+  }
+
+  // Funktion zum Abrufen der Parkplätze basierend auf dem aktuellen Datum
   Future<List<ParkingLot>> fetchParkingLots() async {
-    // Hole das heutige Datum im Format YYYY-MM-DD
-    final DateTime now = DateTime.now();
-    final String formattedDate = DateFormat('yyyy-MM-dd').format(now);
-
-    // Verwende den ApiService, um die Daten zu laden
+    final String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     List<dynamic> parkingLotData = await apiService.fetchParkingLots(formattedDate);
-
-    // Mappe die Daten auf ParkingLot-Objekte
     return parkingLotData.map((data) => ParkingLot.fromJson(data)).toList();
+  }
+
+  // Funktion zum Ändern des Datums
+  void _changeDate(int days) {
+    setState(() {
+      _selectedDate = _selectedDate.add(Duration(days: days));
+      _fetchParkingLots(); // Aktualisiere die API-Anfrage mit dem neuen Datum
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: FutureBuilder<List<ParkingLot>>(
-          future: parkingLots,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            } else if (snapshot.hasError) {
-              return Text('${snapshot.error}');
-            } else {
-              return buildTable(snapshot.data!);
-            }
-          },
-        ),
+      body: Column(
+        children: [
+          // Obere Leiste mit Datum und Pfeilen
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Kleineres Padding
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Linker Pfeil (einen Tag zurück)
+                IconButton(
+                  icon: const Icon(Icons.arrow_left),
+                  onPressed: () => _changeDate(-1), // Einen Tag zurück
+                ),
+                // Aktuelles Datum in der Mitte
+                Text(
+                  DateFormat('dd.MM.yyyy').format(_selectedDate),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                // Rechter Pfeil (einen Tag vor)
+                IconButton(
+                  icon: const Icon(Icons.arrow_right),
+                  onPressed: () => _changeDate(1), // Einen Tag vor
+                ),
+              ],
+            ),
+          ),
+          // Tabelle der Parkplätze
+          FutureBuilder<List<ParkingLot>>(
+            future: parkingLots,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('${snapshot.error}');
+              } else {
+                return Expanded(
+                  child: SingleChildScrollView(
+                    child: buildTable(snapshot.data!),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -69,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0), // Reduziertes Padding
       child: Table(
         border: const TableBorder(
           horizontalInside: BorderSide(width: 2.5, color: Colors.black45),
