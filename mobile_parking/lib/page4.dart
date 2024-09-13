@@ -76,26 +76,8 @@ class _Page4State extends State<Page4> {
     }
   }
 
-  Future<void> _toggleTheme(bool isDarkMode) async {
-     final prefs = await SharedPreferences.getInstance();
-     bool _isDarkMode = false;
-     await prefs.setBool('isDarkMode', _isDarkMode);
-
-     setState(() {
-       _isDarkMode = isDarkMode;
-     });
-  }
-
-Future<void> _saveLoginStatus(bool isLoggedIn, String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', isLoggedIn);
-    await prefs.setString('access_token', token);  // Speichere den Access Token
-  }
-
-
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Column(
         children: <Widget>[

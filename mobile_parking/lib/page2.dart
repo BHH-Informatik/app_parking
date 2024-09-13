@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_parking/model/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -37,7 +38,7 @@ class _Page2State extends State<Page2> {
         _highlightedDays = {
           for (var booking in bookingsJson)
           // Stelle sicher, dass die Uhrzeit auf 00:00:00 gesetzt wird, damit der Vergleich funktioniert
-            DateTime.parse(booking['date']).toLocal(): Colors.green.shade300
+            DateTime.parse(booking['date']).toLocal(): lightColorScheme.secondary
         };
         // print(_highlightedDays); // Ausgabe zur Überprüfung
       });
