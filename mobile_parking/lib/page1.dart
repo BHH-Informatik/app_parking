@@ -53,6 +53,13 @@ class _Page1State extends State<Page1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Buchungen', style: TextStyle(
+            color: Theme.of(context).colorScheme.onSecondary
+        ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+      ),
       body: Center(
         child: FutureBuilder<List<Booking>>(
           future: bookings,
@@ -74,7 +81,7 @@ class _Page1State extends State<Page1> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.cyan.shade800,
+                        color: Theme.of(context).colorScheme.onSecondary,
                       ),
                     ),
                   ),
@@ -93,9 +100,9 @@ class _Page1State extends State<Page1> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Table(
-        border: const TableBorder(
-          horizontalInside: BorderSide(width: 2.0, color: Colors.white),
-          verticalInside: BorderSide(width: 2.0, color: Colors.white),
+        border: TableBorder(
+          horizontalInside: BorderSide(width: 2.0, color: Theme.of(context).colorScheme.surface),
+          verticalInside: BorderSide(width: 2.0, color: Theme.of(context).colorScheme.surface),
         ),
         children: [
           TableRow(
@@ -122,13 +129,15 @@ class _Page1State extends State<Page1> {
   Widget tableHeader(String text) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.cyan.shade200,
+        color: Theme.of(context).colorScheme.secondary,
       ),
       padding: const EdgeInsets.all(8.0),
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.surface),
       ),
     );
   }
@@ -136,12 +145,14 @@ class _Page1State extends State<Page1> {
   Widget tableCell(String text) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.cyan.shade50,
+        color: Theme.of(context).colorScheme.onTertiary,
       ),
       padding: const EdgeInsets.all(8.0),
       child: Text(
         text,
         textAlign: TextAlign.center,
+        style: TextStyle(
+        color: Theme.of(context).colorScheme.onSecondary),
       ),
     );
   }

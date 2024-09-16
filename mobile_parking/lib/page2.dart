@@ -32,7 +32,7 @@ class _Page2State extends State<Page2> {
       setState(() {
         _highlightedDays = {
           for (var booking in bookingsJson)
-            DateTime.parse(booking['booking_date']).toLocal(): Colors.green.shade300
+            DateTime.parse(booking['booking_date']).toLocal(): Theme.of(context).colorScheme.secondary
         };
       });
     } catch (e) {
@@ -45,8 +45,10 @@ class _Page2State extends State<Page2> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kalender'),
-        backgroundColor: Colors.cyan.shade300, // Optional: Hintergrundfarbe der AppBar
+        title: Text('Kalender', style: TextStyle(
+            color: Theme.of(context).colorScheme.onSecondary
+        ),),
+        backgroundColor: Theme.of(context).colorScheme.secondary, // Optional: Hintergrundfarbe der AppBar
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -70,14 +72,14 @@ class _Page2State extends State<Page2> {
               startingDayOfWeek: StartingDayOfWeek.monday,
               calendarStyle: CalendarStyle(
                 todayDecoration: BoxDecoration(
-                  color: Colors.cyan.shade200,
+                  color: Theme.of(context).colorScheme.onPrimary,
                   shape: BoxShape.circle,
                 ),
                 selectedDecoration: BoxDecoration(
-                  color: Colors.cyan.shade300,
+                  color: Theme.of(context).colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
-                selectedTextStyle: const TextStyle(color: Colors.white),
+                selectedTextStyle: TextStyle(color: Theme.of(context).colorScheme.onSecondary),
               ),
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,
@@ -98,7 +100,7 @@ class _Page2State extends State<Page2> {
                       alignment: Alignment.center,
                       child: Text(
                         '${day.day}',
-                        style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: Theme.of(context).colorScheme.surface),
                       ),
                     );
                   }
@@ -110,7 +112,9 @@ class _Page2State extends State<Page2> {
             // Zeigt das ausgewählte Datum an
             Text(
               'Ausgewähltes Datum: ${_selectedDay.day}.${_selectedDay.month}.${_selectedDay.year}',
-              style: const TextStyle(fontSize: 18),
+              style: TextStyle(
+                  fontSize: 18,
+                  color: Theme.of(context).colorScheme.primary),
             ),
           ],
         ),
