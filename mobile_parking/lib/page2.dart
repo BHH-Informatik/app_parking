@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:intl/intl.dart'; // Für die Datumformatierung
+import '../service/api_service.dart'; // Importiere den ApiService
 
-// Kalender Seite
 class Page2 extends StatefulWidget {
   const Page2({super.key});
 
@@ -17,6 +16,7 @@ class _Page2State extends State<Page2> {
 
   // Map zum Speichern der hervorgehobenen Tage (basierend auf den API-Daten)
   Map<DateTime, Color> _highlightedDays = {};
+  final ApiService apiService = ApiService(); // Initialisiere den ApiService
 
   @override
   void initState() {
@@ -24,25 +24,20 @@ class _Page2State extends State<Page2> {
     fetchBookings(); // Lade Buchungen beim Initialisieren der Seite
   }
 
-  // Fetch bookings from API
+  // Buchungen von der API abrufen
   Future<void> fetchBookings() async {
-    final response = await http.get(Uri.parse('https://kapanke.net/capstone/bookings'));
-
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      List<dynamic> bookingsJson = jsonResponse['bookings'];
+    try {
+      List<dynamic> bookingsJson = await apiService.fetchUserBookings();
 
       setState(() {
-        // Map über die Buchungen erstellen und Tage markieren (Uhrzeit auf 00:00:00 setzen)
         _highlightedDays = {
           for (var booking in bookingsJson)
-          // Stelle sicher, dass die Uhrzeit auf 00:00:00 gesetzt wird, damit der Vergleich funktioniert
-            DateTime.parse(booking['date']).toLocal(): Theme.of(context).colorScheme.secondary
+            DateTime.parse(booking['booking_date']).toLocal(): Colors.green.shade300
         };
-        // print(_highlightedDays); // Ausgabe zur Überprüfung
       });
-    } else {
-      throw Exception('Failed to load bookings');
+    } catch (e) {
+      // Fehlerbehandlung
+      print('Fehler beim Abrufen der Buchungen: $e');
     }
   }
 
@@ -50,10 +45,8 @@ class _Page2State extends State<Page2> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Kalender', style: TextStyle(
-          color: Theme.of(context).colorScheme.onSecondary
-        ),),
-        backgroundColor: Theme.of(context).colorScheme.secondary, // Optional: Hintergrundfarbe der AppBar
+        title: const Text('Kalender'),
+        backgroundColor: Colors.cyan.shade300, // Optional: Hintergrundfarbe der AppBar
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -77,14 +70,14 @@ class _Page2State extends State<Page2> {
               startingDayOfWeek: StartingDayOfWeek.monday,
               calendarStyle: CalendarStyle(
                 todayDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onPrimary,
+                  color: Colors.cyan.shade200,
                   shape: BoxShape.circle,
                 ),
                 selectedDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Colors.cyan.shade300,
                   shape: BoxShape.circle,
                 ),
-                selectedTextStyle: TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+                selectedTextStyle: const TextStyle(color: Colors.white),
               ),
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,
@@ -105,7 +98,7 @@ class _Page2State extends State<Page2> {
                       alignment: Alignment.center,
                       child: Text(
                         '${day.day}',
-                        style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     );
                   }
@@ -117,9 +110,7 @@ class _Page2State extends State<Page2> {
             // Zeigt das ausgewählte Datum an
             Text(
               'Ausgewähltes Datum: ${_selectedDay.day}.${_selectedDay.month}.${_selectedDay.year}',
-              style: TextStyle(
-                fontSize: 18,
-                color: Theme.of(context).colorScheme.primary),
+              style: const TextStyle(fontSize: 18),
             ),
           ],
         ),
