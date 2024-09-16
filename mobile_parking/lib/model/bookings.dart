@@ -1,21 +1,25 @@
-// Datenmodell für Buchungen (Bookings)
 class Booking {
+  final int id;
   final String parkingLot;
   final String date;
-  final String timeslot;
+  final String? startTime;
+  final String? endTime;
 
   Booking({
+    required this.id,
     required this.parkingLot,
     required this.date,
-    required this.timeslot,
+    this.startTime,
+    this.endTime,
   });
 
-  // JSON in Booking-Objekt konvertieren
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
-      parkingLot: json['parking_lot'],
-      date: json['date'],
-      timeslot: json['timeslot'],
+      id: json['id'],
+      parkingLot: json['parking_lot_id'].toString(), // Parkplatz ID als String für Darstellung
+      date: json['booking_date'],
+      startTime: json['booking_start_time'],
+      endTime: json['booking_end_time'],
     );
   }
 }

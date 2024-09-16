@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:intl/intl.dart'; // Für die Datumskonvertierung
-import 'model/bookings.dart';
+import 'service/api_service.dart'; // ApiService importieren
+import 'model/bookings.dart'; // Booking Model importieren
 
 class Page1 extends StatefulWidget {
   const Page1({super.key});
@@ -13,6 +12,7 @@ class Page1 extends StatefulWidget {
 
 class _Page1State extends State<Page1> {
   late Future<List<Booking>> bookings;
+  final ApiService apiService = ApiService(); // API Service Initialisieren
 
   @override
   void initState() {
@@ -20,17 +20,10 @@ class _Page1State extends State<Page1> {
     bookings = fetchBookings();
   }
 
-  // Fetch bookings from API
+  // Buchungen von der API abrufen
   Future<List<Booking>> fetchBookings() async {
-    final response = await http.get(Uri.parse('https://kapanke.net/capstone/bookings'));
-
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      List<dynamic> bookingsJson = jsonResponse['bookings'];
-      return bookingsJson.map((data) => Booking.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load bookings');
-    }
+    List<dynamic> bookingData = await apiService.fetchUserBookings();
+    return bookingData.map((data) => Booking.fromJson(data)).toList();
   }
 
   // Konvertiert das Datum ins deutsche Format DD.MM.YYYY
@@ -38,6 +31,24 @@ class _Page1State extends State<Page1> {
     DateTime date = DateTime.parse(dateString); // Datum von String zu DateTime
     return DateFormat('dd.MM.yyyy').format(date); // Datum ins deutsche Format
   }
+
+  // Zeit in ganztägig umwandeln, wenn Start- und Endzeit leer sind
+  String formatTimeSlot(String? startTime, String? endTime) {
+    if (startTime == null && endTime == null) {
+      return 'Ganztägig';
+    }
+
+    String formatTime(String time) {
+      DateTime parsedTime = DateFormat("HH:mm:ss").parse(time); // Parse mit Sekunden
+      return DateFormat('HH:mm').format(parsedTime); // Format nur Stunden und Minuten
+    }
+
+    String formattedStartTime = startTime != null ? formatTime(startTime) : '';
+    String formattedEndTime = endTime != null ? formatTime(endTime) : '';
+
+    return '$formattedStartTime - $formattedEndTime';
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +61,12 @@ class _Page1State extends State<Page1> {
               return const CircularProgressIndicator();
             } else if (snapshot.hasError) {
               return Text('${snapshot.error}');
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Text('Keine Buchungen gefunden');
             } else {
               return Column(
-                crossAxisAlignment: CrossAxisAlignment.center, // TODO: Falls das wirklich linksbündig soll .start
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Überschrift mit eingefärbter Schrift
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
@@ -62,11 +74,10 @@ class _Page1State extends State<Page1> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.cyan.shade800, // Schriftfarbe auf cyan.shade300 geändert
+                        color: Colors.cyan.shade800,
                       ),
                     ),
                   ),
-                  // Tabelle
                   buildTable(snapshot.data!),
                 ],
               );
@@ -87,82 +98,50 @@ class _Page1State extends State<Page1> {
           verticalInside: BorderSide(width: 2.0, color: Colors.white),
         ),
         children: [
-          // Tabellenkopf
           TableRow(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.cyan.shade200,  // Hintergrundfarbe der ersten Zelle
-                ),
-                padding: const EdgeInsets.all(8.0),
-                child: const Text(
-                  'Parkplatz',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.cyan.shade200,  // Hintergrundfarbe der zweiten Zelle
-                ),
-                padding: const EdgeInsets.all(8.0),
-                child: const Text(
-                  'Datum',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.cyan.shade200,  // Hintergrundfarbe der dritten Zelle
-                ),
-                padding: const EdgeInsets.all(8.0),
-                child: const Text(
-                  'Zeitslot',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
+              tableHeader('Parkplatz'),
+              tableHeader('Datum'),
+              tableHeader('Zeitslot'),
             ],
           ),
-          // Dynamische Datenzeilen
           ...data.map((booking) {
             return TableRow(
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,  // Leicht hellere Farbe für die Zeilen
-                  ),
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    booking.parkingLot,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,  // Leicht hellere Farbe für die Zeilen
-                  ),
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    formatGermanDate(booking.date),  // Datum ins deutsche Format konvertiert
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,  // Leicht hellere Farbe für die Zeilen
-                  ),
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    booking.timeslot,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+                tableCell(booking.parkingLot),
+                tableCell(formatGermanDate(booking.date)),
+                tableCell(formatTimeSlot(booking.startTime, booking.endTime)),
               ],
             );
           }).toList(),
         ],
+      ),
+    );
+  }
+
+  Widget tableHeader(String text) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.cyan.shade200,
+      ),
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget tableCell(String text) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.cyan.shade50,
+      ),
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
       ),
     );
   }

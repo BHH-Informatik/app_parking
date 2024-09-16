@@ -68,4 +68,23 @@ class ApiService {
       throw Exception('Fehler beim Buchen des Parkplatzes: ${response.statusCode}');
     }
   }
+
+  // Methode zum Abrufen der Buchungen des Benutzers
+  Future<List<dynamic>> fetchUserBookings() async {
+    final headers = await _getHeaders();
+
+    final response = await http.get(
+      Uri.parse('$BASE_URL/user/bookings'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['bookings']; // Rückgabe der Buchungen
+    } else if (response.statusCode == 404) {
+      throw Exception('Keine Buchungen gefunden');
+    } else {
+      throw Exception('Fehler beim Abrufen der Buchungen: ${response.statusCode}');
+    }
+  }
 }
