@@ -1,9 +1,8 @@
 // models/parking_lot_status.dart
-
 import 'package:flutter/material.dart';
 
 // Enum für den Status
-enum ParkingLotStatus { free, blocked, unknown }
+enum ParkingLotStatus { free, fullDayBlocked, timeRangeBlocked, blockedByUser, unknown }
 
 // Extension für zusätzliche Methoden und Eigenschaften des Enums
 extension ParkingLotStatusExtension on ParkingLotStatus {
@@ -12,8 +11,12 @@ extension ParkingLotStatusExtension on ParkingLotStatus {
     switch (status.toUpperCase()) {
       case 'FREE':
         return ParkingLotStatus.free;
-      case 'BLOCKED':
-        return ParkingLotStatus.blocked;
+      case 'FULL_DAY_BLOCKED':
+        return ParkingLotStatus.fullDayBlocked;
+      case 'TIMERANGE_BLOCKED':
+        return ParkingLotStatus.timeRangeBlocked;
+      case 'BLOCKED_BY_USER':
+        return ParkingLotStatus.blockedByUser;
       default:
         return ParkingLotStatus.unknown;
     }
@@ -23,12 +26,16 @@ extension ParkingLotStatusExtension on ParkingLotStatus {
   Color get color {
     switch (this) {
       case ParkingLotStatus.free:
-        return Colors.green.shade100;
-      case ParkingLotStatus.blocked:
-        return Colors.red.shade100;
+        return Color.fromARGB(64, 107, 135, 158);
+      case ParkingLotStatus.fullDayBlocked:
+        return const Color.fromARGB(127, 252, 108, 92);   
+      case ParkingLotStatus.timeRangeBlocked:
+        return const Color.fromARGB(127, 255, 205, 151);
+      case ParkingLotStatus.blockedByUser:
+        return const Color.fromARGB(127, 3, 147, 163);
       case ParkingLotStatus.unknown:
       default:
-        return Colors.grey.shade100;
+        return const Color.fromARGB(64, 245, 245, 245);
     }
   }
 
@@ -36,9 +43,13 @@ extension ParkingLotStatusExtension on ParkingLotStatus {
   Color get textColor {
     switch (this) {
       case ParkingLotStatus.free:
-        return Colors.green.shade900;
-      case ParkingLotStatus.blocked:
+        return Color.fromARGB(255, 0, 0, 0);
+      case ParkingLotStatus.fullDayBlocked:
         return Colors.red.shade900;
+      case ParkingLotStatus.timeRangeBlocked:
+        return Colors.orange.shade900;
+      case ParkingLotStatus.blockedByUser:
+        return Colors.cyan.shade900;
       case ParkingLotStatus.unknown:
       default:
         return Colors.black54;           // Fallback schwarz
@@ -51,7 +62,7 @@ extension ParkingLotStatusExtension on ParkingLotStatus {
     switch (this) {
       case ParkingLotStatus.free:
         return 'Free';
-      case ParkingLotStatus.blocked:
+      case ParkingLotStatus.blockedByUser:
         return 'Blocked';
       case ParkingLotStatus.unknown:
       default:

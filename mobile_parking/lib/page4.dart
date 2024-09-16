@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 import 'main.dart'; // Importiere MyHomePage für den Fall, dass der Benutzer sich ausloggt
 
+// Einstellungen Seite
 class Page4 extends StatefulWidget {
   const Page4({super.key});
 
@@ -11,7 +12,8 @@ class Page4 extends StatefulWidget {
 }
 
 class _Page4State extends State<Page4> {
-  bool _isDarkMode = false; // Für den Dark Mode Switch
+  // bool _isDarkMode = false; // Für den Dark Mode Switch
+  ThemeMode themeMode = ThemeMode.system;
   bool _isLoggedIn = false; // Login-Status
 
   @override
@@ -31,8 +33,9 @@ class _Page4State extends State<Page4> {
   // Funktion zum Logout
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('isLoggedIn');  // Entferne den Login-Status
-    await prefs.remove('access_token'); // Optional: Entferne auch den Access Token
+    await prefs.remove('isLoggedIn'); // Entferne den Login-Status
+    await prefs
+        .remove('access_token'); // Optional: Entferne auch den Access Token
 
     // Leite zum Login-Screen weiter
     Navigator.pushReplacement(
@@ -47,7 +50,7 @@ class _Page4State extends State<Page4> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Account löschen'),
+        title: const Text('Account löschen', style: TextStyle(color:  Color.fromARGB(255,255,204,151)),),
         content: const Text('Möchten Sie Ihren Account wirklich löschen?'),
         actions: [
           TextButton(
@@ -75,45 +78,63 @@ class _Page4State extends State<Page4> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Einstellungen', style: TextStyle(
+          color: Theme.of(context).colorScheme.onSecondary
+        ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Dark Mode Switch
-          SwitchListTile(
-            title: const Text('Dark Mode'),
-            value: _isDarkMode,
-            onChanged: (value) {
-              setState(() {
-                _isDarkMode = value;
-              });
-              // Hier kannst du die Logik zum Aktivieren des Dark Modes hinzufügen
-            },
-          ),
+        children: <Widget>[
+          const SizedBox(height: 20,),
+            Text(
+              'Choose your theme:',
+              style: TextStyle(
+                fontSize: 18,
+                color:  Theme.of(context).colorScheme.secondary),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                /// Change theme & rebuild to show it using these buttons 
+                ElevatedButton(
+                    onPressed: () => MyApp.of(context).changeTheme(ThemeMode.light),
+                    child: const Text('Light')),
+                ElevatedButton(
+                    onPressed: () => MyApp.of(context).changeTheme(ThemeMode.dark),
+                    child: const Text('Dark')),
+              ],
+            ),
           const SizedBox(height: 20),
 
           // Zeige, ob der Benutzer eingeloggt ist
           Text(
             _isLoggedIn ? 'Sie sind eingeloggt.' : 'Sie sind nicht eingeloggt.',
-            style: const TextStyle(fontSize: 18),
+            style: TextStyle(
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.secondary),
           ),
           const SizedBox(height: 20),
 
           // Login-/Logout-Button basierend auf dem Login-Status
           _isLoggedIn
               ? ElevatedButton(
-            onPressed: _logout,
-            child: const Text('Logout'),
-          )
+                  onPressed: _logout,
+                  child: const Text('Logout'),
+                )
               : ElevatedButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginScreen()),
-              );
-            },
-            child: const Text('Login'),
-          ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  },
+                  child: const Text('Login'),
+                ),
           const SizedBox(height: 20),
 
           // Account löschen Button
@@ -121,10 +142,13 @@ class _Page4State extends State<Page4> {
             ElevatedButton(
               onPressed: _deleteAccount,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Account löschen'),
+              child: Text('Account löschen', style: TextStyle(
+                color: Theme.of(context).colorScheme.surface,
+              ),
+              ),
             ),
         ],
       ),
-    );
+    ));
   }
 }

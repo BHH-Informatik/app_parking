@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'model/app_colors.dart';
 import 'home_screen.dart';
 import 'page1.dart';
 import 'page2.dart';
@@ -11,20 +12,44 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  _MyAppState createState() => _MyAppState();
+
+  static _MyAppState of(BuildContext context) => 
+    context.findAncestorStateOfType<_MyAppState>()!;
+
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system; 
+  
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Bottom Navigation Bar',
+      title: 'Parking App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        colorScheme: lightColorScheme,
       ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: darkColorScheme,
+        brightness: Brightness.dark,
+      ),
+      themeMode: _themeMode, // Default mode
       home: const SplashScreen(), // Starte mit dem SplashScreen
     );
   }
+
+  void changeTheme(ThemeMode themeMode) {
+    setState(() {
+      _themeMode = themeMode;
+    });
+  }
+ 
 }
 
 // SplashScreen prüft den Login-Status
@@ -101,7 +126,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('BHH Parkplätze'),
+        title: Text('BHH Parkplätze', 
+          style: TextStyle(
+            fontSize: 24,
+            color: Theme.of(context).colorScheme.primary),),
       ),
       body: _widgetOptions[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -128,9 +156,8 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(context).colorScheme.secondary,
         onTap: _onItemTapped,
       ),
     );
