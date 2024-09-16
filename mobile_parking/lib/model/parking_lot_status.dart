@@ -1,6 +1,10 @@
 // models/parking_lot_status.dart
 
 import 'package:flutter/material.dart';
+import 'package:mobile_parking/main.dart';
+import 'package:mobile_parking/model/app_colors.dart';
+
+// get theme for colors below
 
 // Enum für den Status
 enum ParkingLotStatus { free, fullDayBlocked, timeRangeBlocked, blockedByUser, unknown }
@@ -29,11 +33,12 @@ extension ParkingLotStatusExtension on ParkingLotStatus {
       case ParkingLotStatus.free:
         return Colors.blue.shade100;
       case ParkingLotStatus.fullDayBlocked:
-        return Colors.red.shade300;
+        return lightColorScheme.primary;   
+
       case ParkingLotStatus.timeRangeBlocked:
-        return Colors.orange.shade300;
+        return lightColorScheme.onPrimary;
       case ParkingLotStatus.blockedByUser:
-        return Colors.cyan.shade700;
+        return lightColorScheme.secondary;
       case ParkingLotStatus.unknown:
       default:
         return Colors.grey.shade100;
