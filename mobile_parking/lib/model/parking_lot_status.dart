@@ -28,7 +28,6 @@ extension ParkingLotStatusExtension on ParkingLotStatus {
       case ParkingLotStatus.free:
         return Color.fromARGB(64, 107, 135, 158);
       case ParkingLotStatus.fullDayBlocked:
-        // return Theme.of(context).colorScheme.primary;
         return const Color.fromARGB(127, 252, 108, 92);   
       case ParkingLotStatus.timeRangeBlocked:
         return const Color.fromARGB(127, 255, 205, 151);

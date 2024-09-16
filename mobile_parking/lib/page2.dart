@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_parking/model/app_colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';

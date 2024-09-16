@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart'; // Für die Datumskonvertierung
-import 'package:mobile_parking/model/app_colors.dart';
 import 'model/bookings.dart';
 
 // Bookings Seite 
