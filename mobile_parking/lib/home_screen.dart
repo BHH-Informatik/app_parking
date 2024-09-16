@@ -5,7 +5,7 @@ import 'model/parking_lot_status.dart';
 import 'ui/booking_dialog.dart';
 import 'service/api_service.dart'; // Importiere den API-Service
 
-// HomeScreen
+// HomeScreen Parkplätze
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -112,9 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0), // Reduziertes Padding
       child: Table(
-        border: const TableBorder(
-          horizontalInside: BorderSide(width: 2.5, color: Colors.black45),
-          verticalInside: BorderSide(width: 2.5, color: Colors.black45),
+        border: TableBorder(
+          horizontalInside: BorderSide(width: 2.5, color: Theme.of(context).colorScheme.tertiary),
+          verticalInside: BorderSide(width: 2.5, color: Theme.of(context).colorScheme.tertiary),
         ),
         children: rows,
       ),

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart'; // Für die Datumskonvertierung
+import 'package:mobile_parking/model/app_colors.dart';
 import 'model/bookings.dart';
 
-// Parkplatz Seite 
+// Bookings Seite 
 class Page1 extends StatefulWidget {
   const Page1({super.key});
 
@@ -43,6 +44,13 @@ class _Page1State extends State<Page1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Buchungen', style: TextStyle(
+          color: Theme.of(context).colorScheme.onSecondary
+        ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+      ),
       body: Center(
         child: FutureBuilder<List<Booking>>(
           future: bookings,
@@ -63,7 +71,7 @@ class _Page1State extends State<Page1> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.cyan.shade800, // Schriftfarbe auf cyan.shade300 geändert
+                        color: Theme.of(context).colorScheme.onSecondary, // Schriftfarbe auf cyan.shade300 geändert
                       ),
                     ),
                   ),
@@ -83,9 +91,9 @@ class _Page1State extends State<Page1> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Table(
-        border: const TableBorder(
-          horizontalInside: BorderSide(width: 2.0, color: Colors.white),
-          verticalInside: BorderSide(width: 2.0, color: Colors.white),
+        border: TableBorder(
+          horizontalInside: BorderSide(width: 2.0, color: Theme.of(context).colorScheme.surface),
+          verticalInside: BorderSide(width: 2.0, color: Theme.of(context).colorScheme.surface),
         ),
         children: [
           // Tabellenkopf
@@ -93,35 +101,41 @@ class _Page1State extends State<Page1> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.cyan.shade200,  // Hintergrundfarbe der ersten Zelle
+                  color: Theme.of(context).colorScheme.secondary,  // Hintergrundfarbe der ersten Zelle
                 ),
                 padding: const EdgeInsets.all(8.0),
-                child: const Text(
+                child: Text(
                   'Parkplatz',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.surface),
                 ),
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.cyan.shade200,  // Hintergrundfarbe der zweiten Zelle
+                  color: Theme.of(context).colorScheme.secondary,  // Hintergrundfarbe der zweiten Zelle
                 ),
                 padding: const EdgeInsets.all(8.0),
-                child: const Text(
+                child: Text(
                   'Datum',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.surface),
                 ),
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.cyan.shade200,  // Hintergrundfarbe der dritten Zelle
+                  color: Theme.of(context).colorScheme.secondary,  // Hintergrundfarbe der dritten Zelle
                 ),
                 padding: const EdgeInsets.all(8.0),
-                child: const Text(
+                child: Text(
                   'Zeitslot',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.surface),
                 ),
               ),
             ],
@@ -132,32 +146,41 @@ class _Page1State extends State<Page1> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,  // Leicht hellere Farbe für die Zeilen
+                    color: Theme.of(context).colorScheme.onTertiary,  // Leicht hellere Farbe für die Zeilen
                   ),
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     booking.parkingLot,
                     textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary
+                    ),
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,  // Leicht hellere Farbe für die Zeilen
+                    color: Theme.of(context).colorScheme.onTertiary,  // Leicht hellere Farbe für die Zeilen
                   ),
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     formatGermanDate(booking.date),  // Datum ins deutsche Format konvertiert
                     textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary
+                    ),
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.cyan.shade50,  // Leicht hellere Farbe für die Zeilen
+                    color: Theme.of(context).colorScheme.onTertiary,  // Leicht hellere Farbe für die Zeilen
                   ),
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     booking.timeslot,
                     textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary
+                    ),
                   ),
                 ),
               ],

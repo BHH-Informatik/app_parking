@@ -84,7 +84,11 @@ class _Page3State extends State<Page3> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Feedback'),
+        title: Text('Feedback', style: TextStyle(
+          color: Theme.of(context).colorScheme.onSecondary
+        ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

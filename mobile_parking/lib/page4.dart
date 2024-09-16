@@ -50,7 +50,7 @@ class _Page4State extends State<Page4> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Account löschen'),
+        title: const Text('Account löschen', style: TextStyle(color:  Color.fromARGB(255,255,204,151)),),
         content: const Text('Möchten Sie Ihren Account wirklich löschen?'),
         actions: [
           TextButton(
@@ -78,12 +78,24 @@ class _Page4State extends State<Page4> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Einstellungen', style: TextStyle(
+          color: Theme.of(context).colorScheme.onSecondary
+        ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
       child: Column(
         children: <Widget>[
-            const Text(
+          const SizedBox(height: 20,),
+            Text(
               'Choose your theme:',
-              style: TextStyle(fontSize: 18),
+              style: TextStyle(
+                fontSize: 18,
+                color:  Theme.of(context).colorScheme.secondary),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -102,7 +114,9 @@ class _Page4State extends State<Page4> {
           // Zeige, ob der Benutzer eingeloggt ist
           Text(
             _isLoggedIn ? 'Sie sind eingeloggt.' : 'Sie sind nicht eingeloggt.',
-            style: const TextStyle(fontSize: 18),
+            style: TextStyle(
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.secondary),
           ),
           const SizedBox(height: 20),
 
@@ -128,10 +142,13 @@ class _Page4State extends State<Page4> {
             ElevatedButton(
               onPressed: _deleteAccount,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Account löschen'),
+              child: Text('Account löschen', style: TextStyle(
+                color: Theme.of(context).colorScheme.surface,
+              ),
+              ),
             ),
         ],
       ),
-    );
+    ));
   }
 }
