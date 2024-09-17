@@ -49,15 +49,13 @@ class _Page1State extends State<Page1> {
     return '$formattedStartTime - $formattedEndTime';
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Buchungen', style: TextStyle(
-            color: Theme.of(context).colorScheme.onSecondary
-        ),
-        ),
+          color: Theme.of(context).colorScheme.onSecondary,
+        )),
         backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
       body: Center(
@@ -71,22 +69,24 @@ class _Page1State extends State<Page1> {
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Text('Keine Buchungen gefunden');
             } else {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Ihre gebuchten Parkplätze',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSecondary,
+              return SingleChildScrollView( // Hier wird das Scrollen ermöglicht
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Ihre gebuchten Parkplätze',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                  buildTable(snapshot.data!),
-                ],
+                    buildTable(snapshot.data!), // Baue die Tabelle basierend auf den Buchungsdaten
+                  ],
+                ),
               );
             }
           },
@@ -136,8 +136,9 @@ class _Page1State extends State<Page1> {
         text,
         textAlign: TextAlign.center,
         style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.surface),
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.surface,
+        ),
       ),
     );
   }
@@ -152,7 +153,8 @@ class _Page1State extends State<Page1> {
         text,
         textAlign: TextAlign.center,
         style: TextStyle(
-        color: Theme.of(context).colorScheme.onSecondary),
+          color: Theme.of(context).colorScheme.onSecondary,
+        ),
       ),
     );
   }
