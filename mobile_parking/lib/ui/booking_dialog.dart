@@ -26,7 +26,8 @@ class BookingDialog extends StatefulWidget {
     if (parkingLot.startTime == null && parkingLot.endTime == null) {
       bookingInfo = 'Ganztägig gebucht';
     } else {
-      bookingInfo = 'Gebucht von ${parkingLot.startTime ?? "Unbekannt"} bis ${parkingLot.endTime ?? "Unbekannt"}';
+      bookingInfo = 'Gebucht von ${formatTime(parkingLot.startTime as String) ?? "Unbekannt"} '
+          'bis ${formatTime(parkingLot.endTime as String) ?? "Unbekannt"} Uhr';
     }
 
     showDialog(
