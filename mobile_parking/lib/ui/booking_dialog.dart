@@ -20,15 +20,71 @@ class BookingDialog extends StatefulWidget {
 
 
   // Statische Methode, um den Dialog für eigene Buchungen anzuzeigen
-  static void showBookingInfo(BuildContext context, ParkingLot parkingLot) {
+  static void showBookingInfo(BuildContext context, ParkingLot parkingLot, VoidCallback onBookingCancel) {
+    // Überprüfe, ob die Buchung ganztägig ist oder für einen bestimmten Zeitraum
+    String bookingInfo;
+    if (parkingLot.startTime == null && parkingLot.endTime == null) {
+      bookingInfo = 'Ganztägig gebucht';
+    } else {
+      bookingInfo = 'Gebucht von ${parkingLot.startTime ?? "Unbekannt"} bis ${parkingLot.endTime ?? "Unbekannt"}';
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Eigene Buchung'),
-          content: const Text(
-            'Sie haben diesen Parkplatz bereits gebucht.',
-          ),
+          content: Text(bookingInfo),
+          actions: [
+            // Button zum Stornieren der Buchung
+            TextButton(
+              onPressed: () async {
+                final apiService = ApiService();
+                try {
+                  await apiService.cancelBooking(parkingLot.bookingId); // Buchung stornieren
+                  onBookingCancel(); // Aktualisiere die UI nach dem Stornieren
+                  Navigator.of(context).pop(); // Dialog schließen
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Buchung erfolgreich storniert')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Fehler beim Stornieren der Buchung')),
+                  );
+                }
+              },
+              child: const Text('Stornieren'),
+            ),
+            // Schließen-Button
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+// Statische Methode, um den Dialog für geblockte Zeiträume anzuzeigen
+  static void showBlockedTimes(BuildContext context, ParkingLot parkingLot, String? startTime, String? endTime) {
+    String timeSlot;
+
+    if (startTime != null && endTime != null) {
+      startTime = formatTime(startTime);
+      endTime = formatTime(endTime);
+      timeSlot = 'Blockiert von $startTime bis $endTime Uhr.';
+    } else {
+      timeSlot = 'Dieser Parkplatz ist ganztägig blockiert.';
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Parkplatz blockiert'),
+          content: Text(timeSlot),  // Zeige die blockierten Zeiten an
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -40,25 +96,9 @@ class BookingDialog extends StatefulWidget {
     );
   }
 
-  // Statische Methode, um den Dialog für geblockte Zeiträume anzuzeigen
-  static void showBlockedTimes(BuildContext context, ParkingLot parkingLot) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Parkplatz blockiert'),
-          content: const Text(
-            'Dieser Parkplatz ist für einen bestimmten Zeitraum blockiert.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+  static String formatTime(String time) {
+    DateTime parsedTime = DateFormat("HH:mm:ss").parse(time); // Parse mit Sekunden
+    return DateFormat('HH:mm').format(parsedTime); // Format nur Stunden und Minuten
   }
 }
 

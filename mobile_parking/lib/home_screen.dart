@@ -185,44 +185,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // Zeigt einen Dialog an, der die Buchungsinformationen des Benutzers anzeigt
   void _showBookingInfo(ParkingLot parkingLot) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Eigene Buchung'),
-          content: const Text(
-            'Sie haben diesen Parkplatz bereits gebucht.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
+    BookingDialog.showBookingInfo(
+      context,
+      parkingLot,
+      _fetchParkingLots,  // Callback nach erfolgreicher Stornierung
     );
   }
 
+
 // Zeigt einen Dialog an, der die geblockten Zeiträume anzeigt
   void _showBlockedTimes(ParkingLot parkingLot) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Parkplatz blockiert'),
-          content: const Text(
-            'Dieser Parkplatz ist für einen bestimmten Zeitraum blockiert.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+    final startTime = parkingLot.startTime; // Hol dir die Startzeit
+    final endTime = parkingLot.endTime;     // Hol dir die Endzeit
+
+    BookingDialog.showBlockedTimes(context, parkingLot, startTime, endTime);
   }
 
 }

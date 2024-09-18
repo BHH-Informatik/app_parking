@@ -87,4 +87,21 @@ class ApiService {
       throw Exception('Fehler beim Abrufen der Buchungen: ${response.statusCode}');
     }
   }
+
+  // Methode zum Stornieren einer Buchung
+  Future<void> cancelBooking(String? bookingId) async {
+    final headers = await _getHeaders();
+
+    final response = await http.delete(
+      Uri.parse('$BASE_URL/booking/$bookingId'), // Endpunkt zum Stornieren
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return; // Erfolg, keine spezielle Rückgabe nötig
+    } else {
+      throw Exception('Fehler beim Stornieren der Buchung: ${response.statusCode}');
+    }
+  }
+
 }
