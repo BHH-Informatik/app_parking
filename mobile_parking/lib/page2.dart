@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart'; // Für die Datumformatierung
-import '../service/api_service.dart'; // Importiere den ApiService
+import 'package:intl/intl.dart';
+import '../service/api_service.dart';
 
 class Page2 extends StatefulWidget {
   const Page2({super.key});
@@ -13,10 +13,10 @@ class Page2 extends StatefulWidget {
 class _Page2State extends State<Page2> {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
+  final ApiService apiService = ApiService();
 
   // Map zum Speichern der hervorgehobenen Tage (basierend auf den API-Daten)
-  Map<DateTime, Color> _highlightedDays = {};
-  final ApiService apiService = ApiService(); // Initialisiere den ApiService
+  Map<DateTime, Map<String, dynamic>> _bookedDays = {};
 
   @override
   void initState() {
@@ -30,43 +30,181 @@ class _Page2State extends State<Page2> {
       List<dynamic> bookingsJson = await apiService.fetchUserBookings();
 
       setState(() {
-        _highlightedDays = {
+        _bookedDays = {
           for (var booking in bookingsJson)
-            DateTime.parse(booking['booking_date']).toLocal(): Theme.of(context).colorScheme.secondary
+          // Setze die Zeit auf 00:00:00, um sicherzustellen, dass wir nur nach dem Datum vergleichen
+            DateTime.parse(booking['booking_date']).toLocal().copyWith(hour: 0, minute: 0, second: 0, millisecond: 0): booking,
         };
       });
     } catch (e) {
-      // Fehlerbehandlung
       print('Fehler beim Abrufen der Buchungen: $e');
     }
+  }
+
+  // Dialog anzeigen, wenn ein bereits gebuchter Tag angeklickt wird
+  void _showBookingDetails(Map<String, dynamic> booking) {
+    String timeSlot = 'Ganztägig';
+    if (booking['start_time'] != null && booking['end_time'] != null) {
+      timeSlot = '${booking['start_time']} - ${booking['end_time']}';
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Buchungsdetails'),
+          content: Text(
+            'Parkplatz: ${booking['parking_lot_id']}\nDatum: ${DateFormat('dd.MM.yyyy').format(DateTime.parse(booking['booking_date']))}\nZeitraum: $timeSlot',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Dialog für das automatische Buchen eines Parkplatzes
+  void _showBookingDialog(DateTime selectedDate) {
+    TimeOfDay? _startTime;
+    TimeOfDay? _endTime;
+    bool _isAllDay = true;
+
+    Future<void> _bookParkingSlot() async {
+      final String bookingDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+      try {
+        await apiService.autoBookParkingLot(
+          bookingDate: bookingDate,
+          startTime: !_isAllDay && _startTime != null ? _startTime!.format(context) : null,
+          endTime: !_isAllDay && _endTime != null ? _endTime!.format(context) : null,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Parkplatz erfolgreich gebucht!')),
+        );
+        Navigator.of(context).pop();
+        fetchBookings(); // Aktualisiere Buchungen
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler bei der Buchung')),
+        );
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Parkplatz buchen'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Checkbox für ganztägig buchen
+              Row(
+                children: [
+                  Checkbox(
+                    value: _isAllDay,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _isAllDay = value ?? true;
+                      });
+                    },
+                  ),
+                  const Text('Ganztägig buchen'),
+                ],
+              ),
+              if (!_isAllDay)
+                Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _startTime = picked;
+                          });
+                        }
+                      },
+                      child: Text(
+                        _startTime != null
+                            ? 'Startzeit: ${_startTime!.format(context)}'
+                            : 'Startzeit auswählen',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _endTime = picked;
+                          });
+                        }
+                      },
+                      child: Text(
+                        _endTime != null
+                            ? 'Endzeit: ${_endTime!.format(context)}'
+                            : 'Endzeit auswählen',
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Abbrechen'),
+            ),
+            ElevatedButton(
+              onPressed: _bookParkingSlot,
+              child: const Text('Buchen'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Kalender', style: TextStyle(
-            color: Theme.of(context).colorScheme.onSecondary
-        ),),
-        backgroundColor: Theme.of(context).colorScheme.secondary, // Optional: Hintergrundfarbe der AppBar
+        title: Text('Kalender', style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
+        backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Kalender anzeigen
             TableCalendar(
               firstDay: DateTime.utc(2000, 1, 1),
               lastDay: DateTime.utc(2100, 12, 31),
               focusedDay: _focusedDay,
-              selectedDayPredicate: (day) {
-                return isSameDay(_selectedDay, day);
-              },
+              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
               onDaySelected: (selectedDay, focusedDay) {
                 setState(() {
                   _selectedDay = selectedDay;
-                  _focusedDay = focusedDay; // Aktualisiere den fokussierten Tag
+                  _focusedDay = focusedDay;
                 });
+
+                // Setze die Uhrzeit für den Vergleich auf 00:00:00
+                DateTime selectedDayWithoutTime = selectedDay.copyWith(hour: 0, minute: 0, second: 0, millisecond: 0);
+
+                if (_bookedDays.containsKey(selectedDayWithoutTime)) {
+                  _showBookingDetails(_bookedDays[selectedDayWithoutTime]!);
+                } else {
+                  _showBookingDialog(selectedDay);
+                }
               },
               calendarFormat: CalendarFormat.month,
               startingDayOfWeek: StartingDayOfWeek.monday,
@@ -85,36 +223,31 @@ class _Page2State extends State<Page2> {
                 formatButtonVisible: false,
                 titleCentered: true,
               ),
-              // Verwende CalendarBuilders, um bestimmte Tage individuell zu gestalten
               calendarBuilders: CalendarBuilders(
                 defaultBuilder: (context, day, focusedDay) {
-                  // Setze die Uhrzeit auf 00:00:00, um nur das Datum zu vergleichen
                   DateTime localDay = DateTime(day.year, day.month, day.day);
-                  if (_highlightedDays.containsKey(localDay)) {
+                  if (_bookedDays.containsKey(localDay.copyWith(hour: 0, minute: 0, second: 0, millisecond: 0))) {
                     return Container(
                       decoration: BoxDecoration(
-                        color: _highlightedDays[localDay], // Farbe für gebuchte Tage (grün)
+                        color: Theme.of(context).colorScheme.secondary,
                         shape: BoxShape.circle,
                       ),
                       margin: const EdgeInsets.all(4.0),
                       alignment: Alignment.center,
                       child: Text(
                         '${day.day}',
-                          style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                        style: TextStyle(color: Theme.of(context).colorScheme.surface),
                       ),
                     );
                   }
-                  return null; // Alle anderen Tage werden standardmäßig dargestellt
+                  return null;
                 },
               ),
             ),
             const SizedBox(height: 20),
-            // Zeigt das ausgewählte Datum an
             Text(
               'Ausgewähltes Datum: ${_selectedDay.day}.${_selectedDay.month}.${_selectedDay.year}',
-              style: TextStyle(
-                  fontSize: 18,
-                  color: Theme.of(context).colorScheme.primary),
+              style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.primary),
             ),
           ],
         ),

@@ -69,6 +69,34 @@ class ApiService {
     }
   }
 
+  // Methode zum AUTOMATISCHEN Buchen eines Parkplatzes
+  Future<void> autoBookParkingLot({
+    required String bookingDate,
+    String? startTime,
+    String? endTime,
+  }) async {
+    final headers = await _getHeaders();
+
+    // Erstelle die Buchungsdaten
+    final bookingData = {
+      "booking_date": bookingDate,
+      if (startTime != null) "start_time": startTime,
+      if (endTime != null) "end_time": endTime,
+    };
+
+    final response = await http.post(
+      Uri.parse('$BASE_URL/booking/autobook'),
+      headers: headers,
+      body: jsonEncode(bookingData),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Fehler beim automatischen Buchen des Parkplatzes: ${response.statusCode}');
+    }
+  }
+
   // Methode zum Abrufen der Buchungen des Benutzers
   Future<List<dynamic>> fetchUserBookings() async {
     final headers = await _getHeaders();

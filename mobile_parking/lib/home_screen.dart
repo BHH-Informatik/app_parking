@@ -294,21 +294,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  // Hilfsfunktion zum Vergleichen von TimeOfDay
-  bool _isBefore(TimeOfDay first, TimeOfDay second) {
-    final now = DateTime.now();
-    final firstTime = DateTime(now.year, now.month, now.day, first.hour, first.minute);
-    final secondTime = DateTime(now.year, now.month, now.day, second.hour, second.minute);
-    return firstTime.isBefore(secondTime);
-  }
-
-  bool _isAfter(TimeOfDay first, TimeOfDay second) {
-    final now = DateTime.now();
-    final firstTime = DateTime(now.year, now.month, now.day, first.hour, first.minute);
-    final secondTime = DateTime(now.year, now.month, now.day, second.hour, second.minute);
-    return firstTime.isAfter(secondTime);
-  }
-
   Future<void> _autoBookParking(TimeOfDay? startTime, TimeOfDay? endTime) async {
     if (startTime == null || endTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -321,59 +306,21 @@ class _HomeScreenState extends State<HomeScreen> {
     final String formattedStartTime = startTime.format(context);
     final String formattedEndTime = endTime.format(context);
 
-    // Simuliere die automatische Buchung, indem du den ersten freien oder passenden timeRangeBlocked-Parkplatz findest
-    List<ParkingLot> availableParkingLots = await fetchParkingLots();
-
-    // Suche einen freien Parkplatz oder einen, der nicht den ganzen Tag geblockt ist und wo die Zeiten nicht kollidieren
-    ParkingLot? availableLot = availableParkingLots.cast<ParkingLot?>().firstWhere(
-          (lot) {
-        if (lot!.status == ParkingLotStatus.free) {
-          return true; // Wenn der Parkplatz frei ist, ist er sofort verfügbar
-        } else if (lot.status == ParkingLotStatus.timeRangeBlocked) {
-          // Prüfe, ob die Zeit nicht kollidiert
-          final TimeOfDay blockedStartTime = _parseTimeOfDay(lot.startTime!);
-          final TimeOfDay blockedEndTime = _parseTimeOfDay(lot.endTime!);
-
-          // Es gibt keine Kollision, wenn die neue Buchung nach dem blockierten Zeitraum endet oder vor dem blockierten Zeitraum beginnt
-          bool noCollision = _isBefore(endTime, blockedStartTime) || _isAfter(startTime, blockedEndTime);
-          return noCollision;
-        }
-        return false; // Alle anderen Stati sind nicht buchbar
-      },
-      orElse: () => null,
-    );
-
-    if (availableLot != null) {
-      // Buchung vornehmen
-      final apiService = ApiService();
-      try {
-        await apiService.bookParkingLot(
-          parkingLotId: availableLot.id,
-          bookingDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
-          startTime: formattedStartTime,
-          endTime: formattedEndTime,
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Parkplatz ${availableLot.name} erfolgreich gebucht!')),
-        );
-        _fetchParkingLots(); // Aktualisiere die Anzeige
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehler bei der Buchung des Parkplatzes')),
-        );
-      }
-    } else {
+    final apiService = ApiService();
+    try {
+      await apiService.autoBookParkingLot(
+        bookingDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kein freier Parkplatz oder passender Slot gefunden')),
+        const SnackBar(content: Text('Parkplatz erfolgreich gebucht!')),
+      );
+      _fetchParkingLots(); // Aktualisiere die Anzeige
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fehler bei der Buchung des Parkplatzes')),
       );
     }
   }
-
-// Hilfsfunktion zum Parsen von String zu TimeOfDay
-  TimeOfDay _parseTimeOfDay(String time) {
-    final format = DateFormat.Hm(); // Verwende das Format "HH:mm"
-    DateTime parsedTime = format.parse(time);
-    return TimeOfDay(hour: parsedTime.hour, minute: parsedTime.minute);
-  }
-
 }
