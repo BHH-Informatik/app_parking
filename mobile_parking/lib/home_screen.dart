@@ -50,6 +50,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Column(
         children: [
+          // Füge die beiden Buttons über der Datumsauswahl hinzu
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedDate = DateTime.now();
+                      _fetchParkingLots();
+                    });
+                  },
+                  child: const Text('Heute'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _showAutoBookingDialog(), // Automatische Buchung
+                  child: const Text('Automatisch buchen'),
+                ),
+              ],
+            ),
+          ),
           // Obere Leiste mit Datum und Pfeilen
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Kleineres Padding
@@ -95,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   // Dynamische Tabelle basierend auf den API-Daten
   Widget buildTable(List<ParkingLot> data) {
@@ -199,6 +222,158 @@ class _HomeScreenState extends State<HomeScreen> {
     final endTime = parkingLot.endTime;     // Hol dir die Endzeit
 
     BookingDialog.showBlockedTimes(context, parkingLot, startTime, endTime);
+  }
+
+
+  void _showAutoBookingDialog() {
+    TimeOfDay? startTime;
+    TimeOfDay? endTime;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Automatische Buchung'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Startzeit auswählen
+              ElevatedButton(
+                onPressed: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      startTime = picked;
+                    });
+                  }
+                },
+                child: Text(startTime != null
+                    ? 'Startzeit: ${startTime!.format(context)}'
+                    : 'Startzeit auswählen'),
+              ),
+              const SizedBox(height: 8),
+              // Endzeit auswählen
+              ElevatedButton(
+                onPressed: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      endTime = picked;
+                    });
+                  }
+                },
+                child: Text(endTime != null
+                    ? 'Endzeit: ${endTime!.format(context)}'
+                    : 'Endzeit auswählen'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Abbrechen'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                // Automatische Buchung auslösen
+                await _autoBookParking(startTime, endTime);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Buchen'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  // Hilfsfunktion zum Vergleichen von TimeOfDay
+  bool _isBefore(TimeOfDay first, TimeOfDay second) {
+    final now = DateTime.now();
+    final firstTime = DateTime(now.year, now.month, now.day, first.hour, first.minute);
+    final secondTime = DateTime(now.year, now.month, now.day, second.hour, second.minute);
+    return firstTime.isBefore(secondTime);
+  }
+
+  bool _isAfter(TimeOfDay first, TimeOfDay second) {
+    final now = DateTime.now();
+    final firstTime = DateTime(now.year, now.month, now.day, first.hour, first.minute);
+    final secondTime = DateTime(now.year, now.month, now.day, second.hour, second.minute);
+    return firstTime.isAfter(secondTime);
+  }
+
+  Future<void> _autoBookParking(TimeOfDay? startTime, TimeOfDay? endTime) async {
+    if (startTime == null || endTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bitte Start- und Endzeit auswählen')),
+      );
+      return;
+    }
+
+    // Formatiere Start- und Endzeit
+    final String formattedStartTime = startTime.format(context);
+    final String formattedEndTime = endTime.format(context);
+
+    // Simuliere die automatische Buchung, indem du den ersten freien oder passenden timeRangeBlocked-Parkplatz findest
+    List<ParkingLot> availableParkingLots = await fetchParkingLots();
+
+    // Suche einen freien Parkplatz oder einen, der nicht den ganzen Tag geblockt ist und wo die Zeiten nicht kollidieren
+    ParkingLot? availableLot = availableParkingLots.cast<ParkingLot?>().firstWhere(
+          (lot) {
+        if (lot!.status == ParkingLotStatus.free) {
+          return true; // Wenn der Parkplatz frei ist, ist er sofort verfügbar
+        } else if (lot.status == ParkingLotStatus.timeRangeBlocked) {
+          // Prüfe, ob die Zeit nicht kollidiert
+          final TimeOfDay blockedStartTime = _parseTimeOfDay(lot.startTime!);
+          final TimeOfDay blockedEndTime = _parseTimeOfDay(lot.endTime!);
+
+          // Es gibt keine Kollision, wenn die neue Buchung nach dem blockierten Zeitraum endet oder vor dem blockierten Zeitraum beginnt
+          bool noCollision = _isBefore(endTime, blockedStartTime) || _isAfter(startTime, blockedEndTime);
+          return noCollision;
+        }
+        return false; // Alle anderen Stati sind nicht buchbar
+      },
+      orElse: () => null,
+    );
+
+    if (availableLot != null) {
+      // Buchung vornehmen
+      final apiService = ApiService();
+      try {
+        await apiService.bookParkingLot(
+          parkingLotId: availableLot.id,
+          bookingDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
+          startTime: formattedStartTime,
+          endTime: formattedEndTime,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Parkplatz ${availableLot.name} erfolgreich gebucht!')),
+        );
+        _fetchParkingLots(); // Aktualisiere die Anzeige
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fehler bei der Buchung des Parkplatzes')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kein freier Parkplatz oder passender Slot gefunden')),
+      );
+    }
+  }
+
+// Hilfsfunktion zum Parsen von String zu TimeOfDay
+  TimeOfDay _parseTimeOfDay(String time) {
+    final format = DateFormat.Hm(); // Verwende das Format "HH:mm"
+    DateTime parsedTime = format.parse(time);
+    return TimeOfDay(hour: parsedTime.hour, minute: parsedTime.minute);
   }
 
 }
