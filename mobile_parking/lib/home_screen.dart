@@ -5,7 +5,6 @@ import 'model/parking_lot_status.dart';
 import 'ui/booking_dialog.dart';
 import 'service/api_service.dart'; // Importiere den API-Service
 
-// HomeScreen Parkplätze
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -51,6 +50,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Column(
         children: [
+          // Füge die beiden Buttons über der Datumsauswahl hinzu
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedDate = DateTime.now();
+                      _fetchParkingLots();
+                    });
+                  },
+                  child: const Text('Heute'),
+                ),
+                ElevatedButton(
+                  onPressed: () => _showAutoBookingDialog(), // Automatische Buchung
+                  child: const Text('Automatisch buchen'),
+                ),
+              ],
+            ),
+          ),
           // Obere Leiste mit Datum und Pfeilen
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), // Kleineres Padding
@@ -97,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   // Dynamische Tabelle basierend auf den API-Daten
   Widget buildTable(List<ParkingLot> data) {
     List<TableRow> rows = [];
@@ -104,45 +126,69 @@ class _HomeScreenState extends State<HomeScreen> {
       rows.add(TableRow(
         children: [
           buildParkingLotCell(data[i]),
-          if (i + 1 < data.length) buildParkingLotCell(data[i + 1]) else Container(),
+          if (i + 1 < data.length) buildParkingLotCell(data[i + 1]) else
+            Container(),
         ],
       ));
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0), // Reduziertes Padding
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      // Reduziertes Padding
       child: Table(
         border: TableBorder(
-          horizontalInside: BorderSide(width: 2.5, color: Theme.of(context).colorScheme.tertiary),
-          verticalInside: BorderSide(width: 2.5, color: Theme.of(context).colorScheme.tertiary),
+          horizontalInside: BorderSide(width: 2.5, color: Theme
+              .of(context)
+              .colorScheme
+              .tertiary),
+          verticalInside: BorderSide(width: 2.5, color: Theme
+              .of(context)
+              .colorScheme
+              .tertiary),
         ),
         children: rows,
       ),
     );
   }
 
-  // Einzelne Zelle für einen Parkplatz, nur aktiv, wenn der Status "Free" ist
+    // Einzelne Zelle für einen Parkplatz, nur aktiv, wenn der Status "Free" ist
   Widget buildParkingLotCell(ParkingLot parkingLot) {
+    bool isFullDayBlocked = parkingLot.status == ParkingLotStatus.fullDayBlocked;
+    bool isTimeRangeBlocked = parkingLot.status == ParkingLotStatus.timeRangeBlocked;
+    bool isBlockedByUser = parkingLot.status == ParkingLotStatus.blockedByUser;
     bool isFree = parkingLot.status == ParkingLotStatus.free;
 
     return InkWell(
-      onTap: isFree
+      onTap: !isFullDayBlocked
           ? () {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return BookingDialog(parkingLot: parkingLot);
-          },
-        );
+        if (isFree) {
+          // Öffne den Buchungsdialog für freie Parkplätze
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return BookingDialog(
+                parkingLot: parkingLot,
+                selectedDate: _selectedDate, // Das aktuelle Datum
+                onBookingSuccess: _fetchParkingLots,
+              );
+            },
+          );
+        } else if (isBlockedByUser) {
+          // Zeige einen Dialog, dass der Benutzer den Parkplatz selbst gebucht hat
+          _showBookingInfo(parkingLot);
+        } else if (isTimeRangeBlocked) {
+          // Zeige die geblockten Zeiten an
+          _showBlockedTimes(parkingLot);
+        }
       }
-          : null,
+          : null, // Kein onTap, wenn der Status "fullDayBlocked" ist
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
             decoration: BoxDecoration(
-              color: parkingLot.status.color,
+              color: parkingLot.status.color, // Farbe basierend auf dem Status
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Text(
@@ -151,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: parkingLot.status.textColor,
+                color: parkingLot.status.textColor, // Textfarbe basierend auf Status
               ),
             ),
           ),
@@ -159,4 +205,36 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+// Zeigt einen Dialog an, der die Buchungsinformationen des Benutzers anzeigt
+  void _showBookingInfo(ParkingLot parkingLot) {
+    BookingDialog.showBookingInfo(
+      context,
+      parkingLot,
+      _fetchParkingLots,  // Callback nach erfolgreicher Stornierung
+    );
+  }
+
+
+// Zeigt einen Dialog an, der die geblockten Zeiträume anzeigt
+  void _showBlockedTimes(ParkingLot parkingLot) {
+    final startTime = parkingLot.startTime; // Hol dir die Startzeit
+    final endTime = parkingLot.endTime;     // Hol dir die Endzeit
+
+    BookingDialog.showBlockedTimes(context, parkingLot, startTime, endTime);
+  }
+
+
+  void _showAutoBookingDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BookingDialog(
+          selectedDate: _selectedDate, // Das aktuelle Datum
+          onBookingSuccess: _fetchParkingLots,
+        );
+      },
+    );
+  }
+
 }

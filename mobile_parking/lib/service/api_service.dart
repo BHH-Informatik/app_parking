@@ -23,6 +23,28 @@ class ApiService {
     };
   }
 
+  // Methode zum Login
+  Future<String> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$BASE_URL/auth/login'),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['access_token']; // Rückgabe des Access Tokens
+    } else {
+      throw Exception('Login fehlgeschlagen');
+    }
+  }
+
   // Beispiel: Methode zum Abrufen der Parkplätze für ein bestimmtes Datum
   Future<List<dynamic>> fetchParkingLots(String date) async {
     final headers = await _getHeaders();
@@ -69,6 +91,34 @@ class ApiService {
     }
   }
 
+  // Methode zum AUTOMATISCHEN Buchen eines Parkplatzes
+  Future<void> autoBookParkingLot({
+    required String bookingDate,
+    String? startTime,
+    String? endTime,
+  }) async {
+    final headers = await _getHeaders();
+
+    // Erstelle die Buchungsdaten
+    final bookingData = {
+      "booking_date": bookingDate,
+      if (startTime != null) "start_time": startTime,
+      if (endTime != null) "end_time": endTime,
+    };
+
+    final response = await http.post(
+      Uri.parse('$BASE_URL/booking/autobook'),
+      headers: headers,
+      body: jsonEncode(bookingData),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Fehler beim automatischen Buchen des Parkplatzes: ${response.statusCode}');
+    }
+  }
+
   // Methode zum Abrufen der Buchungen des Benutzers
   Future<List<dynamic>> fetchUserBookings() async {
     final headers = await _getHeaders();
@@ -87,4 +137,42 @@ class ApiService {
       throw Exception('Fehler beim Abrufen der Buchungen: ${response.statusCode}');
     }
   }
+
+  // Methode zum Stornieren einer Buchung
+  Future<void> cancelBooking(String? bookingId) async {
+    final headers = await _getHeaders();
+
+    final response = await http.delete(
+      Uri.parse('$BASE_URL/booking/$bookingId'), // Endpunkt zum Stornieren
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return; // Erfolg, keine spezielle Rückgabe nötig
+    } else {
+      throw Exception('Fehler beim Stornieren der Buchung: ${response.statusCode}');
+    }
+  }
+
+  // Methode zum Senden des Feedbacks
+  Future<void> sendFeedback({
+    required String subject,
+    required String message,
+  }) async {
+    final headers = await _getHeaders();
+
+    final response = await http.post(
+      Uri.parse('$BASE_URL/message/send'),
+      headers: headers,
+      body: jsonEncode({
+        "subject": subject,
+        "message": message,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Fehler beim Senden des Feedbacks: ${response.statusCode}');
+    }
+  }
+
 }

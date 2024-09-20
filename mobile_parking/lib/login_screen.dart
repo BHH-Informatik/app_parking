@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:mobile_parking/service/api_service.dart'; // ApiService importieren
 import 'main.dart'; // Importiere MyHomePage
 
 // Login Seite
@@ -13,7 +12,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;  // Zeigt den Ladezustand an
+  bool _isLoading = false;
+  final ApiService apiService = ApiService(); // Instanz des ApiService
 
   // Funktion zum Speichern des Login-Status
   Future<void> _saveLoginStatus(bool isLoggedIn, String token) async {
@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // Funktion zum tatsächlichen Login
   Future<void> _login() async {
     setState(() {
-      _isLoading = true;  // Ladeanzeige aktivieren
+      _isLoading = true;
     });
 
     final email = _usernameController.text;
@@ -42,44 +42,22 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     try {
-      final response = await http.post(
-        Uri.parse("https://parking.enten.dev/api/auth/login"),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: jsonEncode({
-          "email": email,
-          "password": password,
-        }),
+      final token = await apiService.login(email, password); // Verwende den ApiService
+
+      // Speichere den Login-Status und den Access Token
+      await _saveLoginStatus(true, token);
+
+      // Leite zur Hauptseite weiter
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MyHomePage()),
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final accessToken = data['access_token'];
-
-        // Speichere den Login-Status und den Access Token
-        await _saveLoginStatus(true, accessToken);
-
-        // Leite zur Hauptseite weiter
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MyHomePage()),
-        );
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login fehlgeschlagen. Bitte überprüfe deine Anmeldedaten.')),
-        );
-      }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ein Fehler ist aufgetreten.')),
+        const SnackBar(content: Text('Login fehlgeschlagen. Bitte überprüfe deine Anmeldedaten.')),
       );
     }
   }
@@ -106,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             _isLoading
-                ? const CircularProgressIndicator()  // Ladeanzeige während des Logins
+                ? const CircularProgressIndicator()
                 : ElevatedButton(
               onPressed: _login,
               child: const Text('Anmelden'),
