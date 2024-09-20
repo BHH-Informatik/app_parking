@@ -226,9 +226,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   void _showAutoBookingDialog() {
-    TimeOfDay? startTime;
-    TimeOfDay? endTime;
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -240,34 +237,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  Future<void> _autoBookParking(TimeOfDay? startTime, TimeOfDay? endTime) async {
-    if (startTime == null || endTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte Start- und Endzeit auswählen')),
-      );
-      return;
-    }
-
-    // Formatiere Start- und Endzeit
-    final String formattedStartTime = startTime.format(context);
-    final String formattedEndTime = endTime.format(context);
-
-    final apiService = ApiService();
-    try {
-      await apiService.autoBookParkingLot(
-        bookingDate: DateFormat('yyyy-MM-dd').format(_selectedDate),
-        startTime: formattedStartTime,
-        endTime: formattedEndTime,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Parkplatz erfolgreich gebucht!')),
-      );
-      _fetchParkingLots(); // Aktualisiere die Anzeige
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fehler bei der Buchung des Parkplatzes')),
-      );
-    }
-  }
 }

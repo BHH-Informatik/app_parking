@@ -23,6 +23,28 @@ class ApiService {
     };
   }
 
+  // Methode zum Login
+  Future<String> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$BASE_URL/auth/login'),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: jsonEncode({
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['access_token']; // Rückgabe des Access Tokens
+    } else {
+      throw Exception('Login fehlgeschlagen');
+    }
+  }
+
   // Beispiel: Methode zum Abrufen der Parkplätze für ein bestimmtes Datum
   Future<List<dynamic>> fetchParkingLots(String date) async {
     final headers = await _getHeaders();
@@ -129,6 +151,27 @@ class ApiService {
       return; // Erfolg, keine spezielle Rückgabe nötig
     } else {
       throw Exception('Fehler beim Stornieren der Buchung: ${response.statusCode}');
+    }
+  }
+
+  // Methode zum Senden des Feedbacks
+  Future<void> sendFeedback({
+    required String subject,
+    required String message,
+  }) async {
+    final headers = await _getHeaders();
+
+    final response = await http.post(
+      Uri.parse('$BASE_URL/message/send'),
+      headers: headers,
+      body: jsonEncode({
+        "subject": subject,
+        "message": message,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Fehler beim Senden des Feedbacks: ${response.statusCode}');
     }
   }
 

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:mobile_parking/service/api_service.dart'; // ApiService importieren
 
 
 // Kontakt Seite
@@ -16,12 +14,10 @@ class _Page3State extends State<Page3> {
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
   bool _isSending = false;
-  
-  //Funktion um Feedback zu Senden
+  final ApiService apiService = ApiService(); // Instanz des ApiService
+
+  // Funktion um Feedback zu senden
   Future<void> _sendFeedback() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('access_token');
-  
     setState(() {
       _isSending = true;
     });
@@ -34,53 +30,29 @@ class _Page3State extends State<Page3> {
         _isSending = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte Titel und Beschreibung eingeben'))
+        const SnackBar(content: Text('Bitte Titel und Beschreibung eingeben')),
       );
       return;
     }
 
-    try{
-      final response = await http.post(
-        Uri.parse("https://parking.enten.dev/api/message/send"),
-        headers: {
-          "Authorization" : "Bearer $token",
-          "Content-Type" : "application/json",
-          "Accept" : "application/json",
-        },
-        body: jsonEncode(
-          {
-            "subject" : subject,
-            "message" : message
-          }
-        )
-      );
-    
-      if (response.statusCode == 200){
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ihr Feedback wurde gesendet.')),
-        );
-        Navigator.pushReplacementNamed(context, '/page3');
+    try {
+      await apiService.sendFeedback(subject: subject, message: message); // Verwende ApiService
 
-      } else {
-        setState(() {
-          _isSending = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Senden des Feedbacks fehlgeschlagen. Bitte überprüfe deine Eingabe.')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ihr Feedback wurde gesendet.')),
+      );
+      Navigator.pushReplacementNamed(context, '/page3');
     } catch (e) {
       setState(() {
         _isSending = false;
       });
-      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ein Fehler ist aufgetreten.')),
+        const SnackBar(content: Text('Senden des Feedbacks fehlgeschlagen. Bitte überprüfe deine Eingabe.')),
       );
     }
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -115,5 +87,4 @@ class _Page3State extends State<Page3> {
       ),
     );
   }
-
 }
