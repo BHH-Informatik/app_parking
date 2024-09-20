@@ -1,33 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/parking_lot.dart';
-import '../service/api_service.dart'; // Importiere den API-Service
+import '../service/api_service.dart';
 
 class BookingDialog extends StatefulWidget {
-  final ParkingLot parkingLot;
+  final ParkingLot? parkingLot;
   final DateTime selectedDate;
-  final VoidCallback onBookingSuccess; // Callback, der nach einer erfolgreichen Buchung aufgerufen wird
+  final VoidCallback onBookingSuccess;
 
   const BookingDialog({
     super.key,
-    required this.parkingLot,
+    this.parkingLot,
     required this.selectedDate,
-    required this.onBookingSuccess, // Füge den Callback hinzu
+    required this.onBookingSuccess,
   });
 
   @override
   _BookingDialogState createState() => _BookingDialogState();
 
 
-  // Statische Methode, um den Dialog für eigene Buchungen anzuzeigen
+  // Statische Methode für eigene Buchungen
   static void showBookingInfo(BuildContext context, ParkingLot parkingLot, VoidCallback onBookingCancel) {
-    // Überprüfe, ob die Buchung ganztägig ist oder für einen bestimmten Zeitraum
     String bookingInfo;
     if (parkingLot.startTime == null && parkingLot.endTime == null) {
       bookingInfo = 'Ganztägig gebucht';
     } else {
-      bookingInfo = 'Gebucht von ${formatTime(parkingLot.startTime as String) ?? "Unbekannt"} '
-          'bis ${formatTime(parkingLot.endTime as String) ?? "Unbekannt"} Uhr';
+      bookingInfo = 'Gebucht von ${formatTime(parkingLot.startTime!)} bis ${formatTime(parkingLot.endTime!)} Uhr';
     }
 
     showDialog(
@@ -37,14 +35,13 @@ class BookingDialog extends StatefulWidget {
           title: const Text('Eigene Buchung'),
           content: Text(bookingInfo),
           actions: [
-            // Button zum Stornieren der Buchung
             TextButton(
               onPressed: () async {
                 final apiService = ApiService();
                 try {
-                  await apiService.cancelBooking(parkingLot.bookingId); // Buchung stornieren
-                  onBookingCancel(); // Aktualisiere die UI nach dem Stornieren
-                  Navigator.of(context).pop(); // Dialog schließen
+                  await apiService.cancelBooking(parkingLot.bookingId);
+                  onBookingCancel();
+                  Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Buchung erfolgreich storniert')),
                   );
@@ -56,7 +53,6 @@ class BookingDialog extends StatefulWidget {
               },
               child: const Text('Stornieren'),
             ),
-            // Schließen-Button
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('OK'),
@@ -85,7 +81,7 @@ class BookingDialog extends StatefulWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Parkplatz blockiert'),
-          content: Text(timeSlot),  // Zeige die blockierten Zeiten an
+          content: Text(timeSlot),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -98,17 +94,18 @@ class BookingDialog extends StatefulWidget {
   }
 
   static String formatTime(String time) {
-    DateTime parsedTime = DateFormat("HH:mm:ss").parse(time); // Parse mit Sekunden
-    return DateFormat('HH:mm').format(parsedTime); // Format nur Stunden und Minuten
+    DateTime parsedTime = DateFormat("HH:mm:ss").parse(time);
+    return DateFormat('HH:mm').format(parsedTime);
   }
 }
+
 
 class _BookingDialogState extends State<BookingDialog> {
   final ApiService apiService = ApiService();
   bool _isAllDay = true;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
-  bool _isLoading = false; // Ladeanzeige für die Buchung
+  bool _isLoading = false;
 
   // Funktion zum Buchen des Parkplatzes
   Future<void> _bookParkingLot() async {
@@ -116,26 +113,32 @@ class _BookingDialogState extends State<BookingDialog> {
       _isLoading = true;
     });
 
-    // Formatiere das ausgewählte Datum für die API-Anfrage
     final String bookingDate = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
 
     try {
-      await apiService.bookParkingLot(
-        parkingLotId: widget.parkingLot.id,
-        bookingDate: bookingDate,
-        startTime: !_isAllDay && _startTime != null ? _startTime!.format(context) : null,
-        endTime: !_isAllDay && _endTime != null ? _endTime!.format(context) : null,
-      );
+      if (widget.parkingLot != null) {
+        // Normale Buchung
+        await apiService.bookParkingLot(
+          parkingLotId: widget.parkingLot!.id,
+          bookingDate: bookingDate,
+          startTime: !_isAllDay && _startTime != null ? _startTime!.format(context) : null,
+          endTime: !_isAllDay && _endTime != null ? _endTime!.format(context) : null,
+        );
+      } else {
+        // Automatische Buchung
+        await apiService.autoBookParkingLot(
+          bookingDate: bookingDate,
+          startTime: !_isAllDay && _startTime != null ? _startTime!.format(context) : null,
+          endTime: !_isAllDay && _endTime != null ? _endTime!.format(context) : null,
+        );
+      }
 
-      // Zeige Erfolgsmeldung und schließe den Dialog
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Parkplatz erfolgreich gebucht!')),
       );
-      // Schließe den Dialog und rufe den Callback auf, um die Daten neu zu laden
-      widget.onBookingSuccess(); // Rufe den Callback auf
+      widget.onBookingSuccess();
       Navigator.of(context).pop();
     } catch (e) {
-      // Fehlermeldung anzeigen
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fehler bei der Buchung des Parkplatzes')),
       );
@@ -166,11 +169,12 @@ class _BookingDialogState extends State<BookingDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Parkplatz ${widget.parkingLot.name} buchen'),
+      title: Text(widget.parkingLot != null
+          ? 'Parkplatz ${widget.parkingLot!.name} buchen'
+          : 'Automatische Buchung'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Checkbox für ganztägig buchen
           Row(
             children: [
               Checkbox(
@@ -185,7 +189,6 @@ class _BookingDialogState extends State<BookingDialog> {
             ],
           ),
           if (!_isAllDay) ...[
-            // Auswahl für Start- und Endzeiten, wenn nicht ganztägig gebucht wird
             ElevatedButton(
               onPressed: () => _selectTime(context, isStartTime: true),
               child: Text(_startTime != null
@@ -207,7 +210,7 @@ class _BookingDialogState extends State<BookingDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        if (!_isLoading) // Ladeanzeige während der Buchung
+        if (!_isLoading)
           ElevatedButton(
             onPressed: _bookParkingLot,
             child: const Text('Buchen'),

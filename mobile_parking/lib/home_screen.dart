@@ -232,62 +232,9 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Automatische Buchung'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Startzeit auswählen
-              ElevatedButton(
-                onPressed: () async {
-                  final picked = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      startTime = picked;
-                    });
-                  }
-                },
-                child: Text(startTime != null
-                    ? 'Startzeit: ${startTime!.format(context)}'
-                    : 'Startzeit auswählen'),
-              ),
-              const SizedBox(height: 8),
-              // Endzeit auswählen
-              ElevatedButton(
-                onPressed: () async {
-                  final picked = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      endTime = picked;
-                    });
-                  }
-                },
-                child: Text(endTime != null
-                    ? 'Endzeit: ${endTime!.format(context)}'
-                    : 'Endzeit auswählen'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                // Automatische Buchung auslösen
-                await _autoBookParking(startTime, endTime);
-                Navigator.of(context).pop();
-              },
-              child: const Text('Buchen'),
-            ),
-          ],
+        return BookingDialog(
+          selectedDate: _selectedDate, // Das aktuelle Datum
+          onBookingSuccess: _fetchParkingLots,
         );
       },
     );
