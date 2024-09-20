@@ -41,14 +41,18 @@ class _Page3State extends State<Page3> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ihr Feedback wurde gesendet.')),
       );
-      Navigator.pushReplacementNamed(context, '/page3');
+
+      // Formular zurücksetzen nach erfolgreichem Senden
+      _subjectController.clear();
+      _messageController.clear();
     } catch (e) {
-      setState(() {
-        _isSending = false;
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Senden des Feedbacks fehlgeschlagen. Bitte überprüfe deine Eingabe.')),
       );
+    } finally {
+      setState(() {
+        _isSending = false;
+      });
     }
   }
 
