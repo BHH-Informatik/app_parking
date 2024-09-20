@@ -137,16 +137,16 @@ class _Page4State extends State<Page4> {
                 ),
           const SizedBox(height: 20),
 
-          // Account löschen Button
-          if (_isLoggedIn) // Nur anzeigen, wenn der Benutzer eingeloggt ist
-            ElevatedButton(
-              onPressed: _deleteAccount,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text('Account löschen', style: TextStyle(
-                color: Theme.of(context).colorScheme.surface,
-              ),
-              ),
-            ),
+          // Account löschen Button - Mertens möchte keine DSGVO
+          // if (_isLoggedIn) // Nur anzeigen, wenn der Benutzer eingeloggt ist
+          //   ElevatedButton(
+          //     onPressed: _deleteAccount,
+          //     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          //     child: Text('Account löschen', style: TextStyle(
+          //       color: Theme.of(context).colorScheme.surface,
+          //     ),
+          //     ),
+          //   ),
         ],
       ),
     ));
