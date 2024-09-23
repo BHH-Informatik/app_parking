@@ -89,6 +89,7 @@ class _Page4State extends State<Page4> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
+              // Nicht zu lange Texte schreiben hier,sonst gibt das Overflow
               _buildLegendItem(context,
                   ThemeUtils.getColorDependingOnTheme(context, ParkingLotStatus.free),
                   'Freier Parkplatz'),
