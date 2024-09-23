@@ -43,4 +43,4 @@ const darkColorScheme = ColorScheme(
 );
 
 var isDark = true;
-var activeColorScheme = isDark ? darkColorScheme : lightColorScheme;
+var activeColorScheme = isDark ? darkColorScheme : lightColorScheme; // Glaube das tuts nicht
