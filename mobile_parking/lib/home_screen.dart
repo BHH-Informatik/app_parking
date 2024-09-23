@@ -4,6 +4,8 @@ import 'model/parking_lot.dart';
 import 'model/parking_lot_status.dart';
 import 'ui/booking_dialog.dart';
 import 'service/api_service.dart'; // Importiere den API-Service
+import 'model/app_colors.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -188,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
             decoration: BoxDecoration(
-              color: getColorDependingOnTheme(parkingLot.status), // Farbe basierend auf dem Status
+              color: ThemeUtils.getColorDependingOnTheme(context, parkingLot.status), // Farbe basierend auf dem Status
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Text(
@@ -197,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: getTextColorDependingOnTheme(parkingLot.status), // Textfarbe basierend auf Status
+                color: ThemeUtils.getTextColorDependingOnTheme(context, parkingLot.status), // Textfarbe basierend auf Status
               ),
             ),
           ),
@@ -235,73 +237,5 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
-  }
-
-  Color getColorDependingOnTheme(ParkingLotStatus status) {
-    if (Theme.of(context).colorScheme.brightness.index == 0) { // 0 = Darkmode
-      switch (status) {
-        case ParkingLotStatus.free:
-          return Color.fromARGB(64, 107, 135, 158);
-        case ParkingLotStatus.fullDayBlocked:
-          return const Color.fromARGB(50, 252, 108, 92);
-        case ParkingLotStatus.timeRangeBlocked:
-          return const Color.fromARGB(127, 255, 205, 151);
-        case ParkingLotStatus.blockedByUser:
-          return const Color.fromARGB(127, 3, 147, 163);
-        case ParkingLotStatus.unknown:
-        default:
-          return const Color.fromARGB(64, 245, 245, 245);
-      }
-    } else if (Theme.of(context).colorScheme.brightness.index == 1) { // 1 = Whitemode
-      switch (status) {
-        case ParkingLotStatus.free:
-          return Color.fromARGB(64, 107, 135, 158);
-        case ParkingLotStatus.fullDayBlocked:
-          return const Color.fromARGB(127, 252, 108, 92);
-        case ParkingLotStatus.timeRangeBlocked:
-          return const Color.fromARGB(127, 255, 205, 151);
-        case ParkingLotStatus.blockedByUser:
-          return const Color.fromARGB(127, 3, 147, 163);
-        case ParkingLotStatus.unknown:
-        default:
-          return const Color.fromARGB(64, 245, 245, 245);
-      }
-    } else {
-      return Color.fromARGB(255, 204, 0, 153);
-    }
-  }
-
-  Color getTextColorDependingOnTheme(ParkingLotStatus status) {
-    if (Theme.of(context).colorScheme.brightness.index == 0) { // Darkmode
-      switch (status) {
-        case ParkingLotStatus.free:
-          return Color.fromARGB(255, 0, 0, 0);
-        case ParkingLotStatus.fullDayBlocked:
-          return Colors.red.shade600;
-        case ParkingLotStatus.timeRangeBlocked:
-          return Colors.orange.shade500;
-        case ParkingLotStatus.blockedByUser:
-          return Colors.cyan.shade600;
-        case ParkingLotStatus.unknown:
-        default:
-          return Colors.black54;           // Fallback schwarz
-      }
-    } else if (Theme.of(context).colorScheme.brightness.index == 1) { // Whitemode
-      switch (status) {
-        case ParkingLotStatus.free:
-          return Color.fromARGB(255, 0, 0, 0);
-        case ParkingLotStatus.fullDayBlocked:
-          return Colors.red.shade900;
-        case ParkingLotStatus.timeRangeBlocked:
-          return Colors.yellow.shade900;
-        case ParkingLotStatus.blockedByUser:
-          return Colors.cyan.shade900;
-        case ParkingLotStatus.unknown:
-        default:
-          return Colors.black54;           // Fallback schwarz
-      }
-    } else {
-      return Color.fromARGB(255, 204, 0, 153);
-    }
   }
 }
