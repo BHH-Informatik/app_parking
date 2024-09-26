@@ -47,6 +47,7 @@ class ApiService {
 
   // Beispiel: Methode zum Abrufen der Parkplätze für ein bestimmtes Datum
   Future<List<dynamic>> fetchParkingLots(String date) async {
+    // Sehr schöner code sage ich, aber das muss so
     var headers;
     try {
       headers = await _getHeaders();
