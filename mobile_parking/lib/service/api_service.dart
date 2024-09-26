@@ -41,13 +41,20 @@ class ApiService {
       final data = jsonDecode(response.body);
       return data['access_token']; // Rückgabe des Access Tokens
     } else {
-      throw Exception('Login fehlgeschlagen');
+      throw Exception('Login fehlgeschlagen. Statuscode: ${response.statusCode}');
     }
   }
 
   // Beispiel: Methode zum Abrufen der Parkplätze für ein bestimmtes Datum
   Future<List<dynamic>> fetchParkingLots(String date) async {
-    final headers = await _getHeaders();
+    var headers;
+    try {
+      headers = await _getHeaders();
+    } catch (e) {
+      headers = {'Content-Type': 'application/json',
+    'Accept': 'application/json',};
+    }
+
 
     final response = await http.get(
       Uri.parse('$BASE_URL/parking_lots/$date'),
@@ -57,7 +64,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body)['parking_lots'];
     } else {
-      throw Exception('Fehler beim Laden der Parkplätze: ${response.statusCode}');
+      throw Exception('Fehler beim Laden der Parkplätze. Statuscode: ${response.statusCode}');
     }
   }
 
@@ -87,7 +94,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Fehler beim Buchen des Parkplatzes: ${response.statusCode}');
+      throw Exception('Fehler beim Buchen des Parkplatzes. Statuscode: ${response.statusCode}');
     }
   }
 
@@ -115,7 +122,7 @@ class ApiService {
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Fehler beim automatischen Buchen des Parkplatzes: ${response.statusCode}');
+      throw Exception('Fehler beim automatischen Buchen des Parkplatzes. Statuscode: ${response.statusCode}');
     }
   }
 
@@ -134,7 +141,7 @@ class ApiService {
     } else if (response.statusCode == 404) {
       throw Exception('Keine Buchungen gefunden');
     } else {
-      throw Exception('Fehler beim Abrufen der Buchungen: ${response.statusCode}');
+      throw Exception('Fehler beim Abrufen der Buchungen. Statuscode: ${response.statusCode}');
     }
   }
 
@@ -150,7 +157,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return; // Erfolg, keine spezielle Rückgabe nötig
     } else {
-      throw Exception('Fehler beim Stornieren der Buchung: ${response.statusCode}');
+      throw Exception('Fehler beim Stornieren der Buchung. Statuscode: ${response.statusCode}');
     }
   }
 
@@ -171,7 +178,7 @@ class ApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Fehler beim Senden des Feedbacks: ${response.statusCode}');
+      throw Exception('Fehler beim Senden des Feedbacks. Statuscode: ${response.statusCode}');
     }
   }
 
