@@ -1,4 +1,4 @@
-
+import 'parking_lot_status.dart';
 import 'package:flutter/material.dart';
 
 const lightColorScheme = ColorScheme(
@@ -42,5 +42,73 @@ const darkColorScheme = ColorScheme(
 
 );
 
-var isDark = true;
-var activeColorScheme = isDark ? darkColorScheme : lightColorScheme;
+class ThemeUtils {
+  static Color getColorDependingOnTheme(BuildContext context, ParkingLotStatus status) {
+    if (Theme.of(context).colorScheme.brightness.index == 0) { // Darkmode
+      switch (status) {
+        case ParkingLotStatus.free:
+          return Color.fromARGB(64, 107, 135, 158);
+        case ParkingLotStatus.fullDayBlocked:
+          return const Color.fromARGB(50, 252, 108, 92);
+        case ParkingLotStatus.timeRangeBlocked:
+          return const Color.fromARGB(127, 255, 205, 151);
+        case ParkingLotStatus.blockedByUser:
+          return const Color.fromARGB(127, 3, 147, 163);
+        case ParkingLotStatus.unknown:
+        default:
+          return const Color.fromARGB(64, 245, 245, 245);
+      }
+    } else if (Theme.of(context).colorScheme.brightness.index == 1) { // Lightmode
+      switch (status) {
+        case ParkingLotStatus.free:
+          return Color.fromARGB(64, 107, 135, 158);
+        case ParkingLotStatus.fullDayBlocked:
+          return const Color.fromARGB(127, 252, 108, 92);
+        case ParkingLotStatus.timeRangeBlocked:
+          return const Color.fromARGB(127, 255, 205, 151);
+        case ParkingLotStatus.blockedByUser:
+          return const Color.fromARGB(127, 3, 147, 163);
+        case ParkingLotStatus.unknown:
+        default:
+          return const Color.fromARGB(64, 245, 245, 245);
+      }
+    } else {
+      return Color.fromARGB(255, 204, 0, 153);
+    }
+  }
+
+  static Color getTextColorDependingOnTheme(BuildContext context, ParkingLotStatus status) {
+    if (Theme.of(context).colorScheme.brightness.index == 0) { // Darkmode
+      switch (status) {
+        case ParkingLotStatus.free:
+          return Color.fromARGB(255, 0, 0, 0);
+        case ParkingLotStatus.fullDayBlocked:
+          return Colors.red.shade600;
+        case ParkingLotStatus.timeRangeBlocked:
+          return Colors.orange.shade500;
+        case ParkingLotStatus.blockedByUser:
+          return Colors.cyan.shade600;
+        case ParkingLotStatus.unknown:
+        default:
+          return Colors.black54;
+      }
+    } else if (Theme.of(context).colorScheme.brightness.index == 1) { // Lightmode
+      switch (status) {
+        case ParkingLotStatus.free:
+          return Color.fromARGB(255, 0, 0, 0);
+        case ParkingLotStatus.fullDayBlocked:
+          return Colors.red.shade900;
+        case ParkingLotStatus.timeRangeBlocked:
+          return Colors.yellow.shade900;
+        case ParkingLotStatus.blockedByUser:
+          return Colors.cyan.shade900;
+        case ParkingLotStatus.unknown:
+        default:
+          return Colors.black54;
+      }
+    } else {
+      return Color.fromARGB(255, 204, 0, 153);
+    }
+  }
+}
+

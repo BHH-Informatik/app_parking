@@ -4,6 +4,8 @@ import 'model/parking_lot.dart';
 import 'model/parking_lot_status.dart';
 import 'ui/booking_dialog.dart';
 import 'service/api_service.dart'; // Importiere den API-Service
+import 'model/app_colors.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -188,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
             decoration: BoxDecoration(
-              color: parkingLot.status.color, // Farbe basierend auf dem Status
+              color: ThemeUtils.getColorDependingOnTheme(context, parkingLot.status), // Farbe basierend auf dem Status
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Text(
@@ -197,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                color: parkingLot.status.textColor, // Textfarbe basierend auf Status
+                color: ThemeUtils.getTextColorDependingOnTheme(context, parkingLot.status), // Textfarbe basierend auf Status
               ),
             ),
           ),
@@ -236,5 +238,4 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
 }
