@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,7 +13,8 @@ class ApiService {
     final String? token = prefs.getString('access_token');
 
     if (token == null) {
-      throw Exception('Kein Zugriffstoken gefunden. Bitte loggen Sie sich erneut ein.');
+      throw Exception(
+          'Kein Zugriffstoken gefunden. Bitte loggen Sie sich erneut ein.');
     }
 
     // Erstelle die Header
@@ -25,23 +27,35 @@ class ApiService {
 
   // Methode zum Login
   Future<String> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$BASE_URL/auth/login'),
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: jsonEncode({
-        "email": email,
-        "password": password,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$BASE_URL/auth/login'),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['access_token']; // Rückgabe des Access Tokens
-    } else {
-      throw Exception('Login fehlgeschlagen. Statuscode: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['access_token']; // Rückgabe des Access Tokens
+      } else {
+        throw Exception(
+            'Login fehlgeschlagen. Statuscode: ${response.statusCode}');
+      }
+    } on SocketException catch (_) {
+      throw Exception(
+          'Keine Internetverbindung. Bitte überprüfe deine Verbindung.');
+    } on HttpException catch (_) {
+      throw Exception('Fehler beim Laden der Daten.');
+    } on FormatException catch (_) {
+      throw Exception('Antwort konnte nicht gelesen werden (falsches Format).');
+    } catch (e) {
+      throw Exception('Unbekannter Fehler: $e');
     }
   }
 
@@ -52,20 +66,33 @@ class ApiService {
     try {
       headers = await _getHeaders();
     } catch (e) {
-      headers = {'Content-Type': 'application/json',
-    'Accept': 'application/json',};
+      headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
     }
 
+    try {
+      final response = await http.get(
+        Uri.parse('$BASE_URL/parking_lots/$date'),
+        headers: headers,
+      );
 
-    final response = await http.get(
-      Uri.parse('$BASE_URL/parking_lots/$date'),
-      headers: headers,
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body)['parking_lots'];
-    } else {
-      throw Exception('Fehler beim Laden der Parkplätze. Statuscode: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body)['parking_lots'];
+      } else {
+        throw Exception(
+            'Fehler beim Laden der Parkplätze. Statuscode: ${response.statusCode}');
+      }
+    } on SocketException catch (_) {
+      throw Exception(
+          'Keine Internetverbindung. Bitte überprüfe deine Verbindung.');
+    } on HttpException catch (_) {
+      throw Exception('Fehler beim Laden der Daten.');
+    } on FormatException catch (_) {
+      throw Exception('Antwort konnte nicht gelesen werden (falsches Format).');
+    } catch (e) {
+      throw Exception('Unbekannter Fehler: $e');
     }
   }
 
@@ -86,16 +113,28 @@ class ApiService {
       if (endTime != null) "end_time": endTime,
     };
 
-    final response = await http.post(
-      Uri.parse('$BASE_URL/booking/reserve'),
-      headers: headers,
-      body: jsonEncode(bookingData),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$BASE_URL/booking/reserve'),
+        headers: headers,
+        body: jsonEncode(bookingData),
+      );
 
-    if (response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Fehler beim Buchen des Parkplatzes. Statuscode: ${response.statusCode}');
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+            'Fehler beim Buchen des Parkplatzes. Statuscode: ${response.statusCode}');
+      }
+    } on SocketException catch (_) {
+      throw Exception(
+          'Keine Internetverbindung. Bitte überprüfe deine Verbindung.');
+    } on HttpException catch (_) {
+      throw Exception('Fehler beim Laden der Daten.');
+    } on FormatException catch (_) {
+      throw Exception('Antwort konnte nicht gelesen werden (falsches Format).');
+    } catch (e) {
+      throw Exception('Unbekannter Fehler: $e');
     }
   }
 
@@ -114,16 +153,28 @@ class ApiService {
       if (endTime != null) "end_time": endTime,
     };
 
-    final response = await http.post(
-      Uri.parse('$BASE_URL/booking/autobook'),
-      headers: headers,
-      body: jsonEncode(bookingData),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$BASE_URL/booking/autobook'),
+        headers: headers,
+        body: jsonEncode(bookingData),
+      );
 
-    if (response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Fehler beim automatischen Buchen des Parkplatzes. Statuscode: ${response.statusCode}');
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception(
+            'Fehler beim automatischen Buchen des Parkplatzes. Statuscode: ${response.statusCode}');
+      }
+    } on SocketException catch (_) {
+      throw Exception(
+          'Keine Internetverbindung. Bitte überprüfe deine Verbindung.');
+    } on HttpException catch (_) {
+      throw Exception('Fehler beim Laden der Daten.');
+    } on FormatException catch (_) {
+      throw Exception('Antwort konnte nicht gelesen werden (falsches Format).');
+    } catch (e) {
+      throw Exception('Unbekannter Fehler: $e');
     }
   }
 
@@ -131,18 +182,30 @@ class ApiService {
   Future<List<dynamic>> fetchUserBookings() async {
     final headers = await _getHeaders();
 
-    final response = await http.get(
-      Uri.parse('$BASE_URL/user/bookings'),
-      headers: headers,
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$BASE_URL/user/bookings'),
+        headers: headers,
+      );
 
-    if (response.statusCode == 200) {
-      final jsonResponse = jsonDecode(response.body);
-      return jsonResponse['bookings']; // Rückgabe der Buchungen
-    } else if (response.statusCode == 404) {
-      throw Exception('Keine Buchungen gefunden');
-    } else {
-      throw Exception('Fehler beim Abrufen der Buchungen. Statuscode: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        return jsonResponse['bookings']; // Rückgabe der Buchungen
+      } else if (response.statusCode == 404) {
+        throw Exception('Keine Buchungen gefunden');
+      } else {
+        throw Exception(
+            'Fehler beim Abrufen der Buchungen. Statuscode: ${response.statusCode}');
+      }
+    } on SocketException catch (_) {
+      throw Exception(
+          'Keine Internetverbindung. Bitte überprüfe deine Verbindung.');
+    } on HttpException catch (_) {
+      throw Exception('Fehler beim Laden der Daten.');
+    } on FormatException catch (_) {
+      throw Exception('Antwort konnte nicht gelesen werden (falsches Format).');
+    } catch (e) {
+      throw Exception('Unbekannter Fehler: $e');
     }
   }
 
@@ -150,15 +213,27 @@ class ApiService {
   Future<void> cancelBooking(String? bookingId) async {
     final headers = await _getHeaders();
 
-    final response = await http.delete(
-      Uri.parse('$BASE_URL/booking/$bookingId'), // Endpunkt zum Stornieren
-      headers: headers,
-    );
+    try {
+      final response = await http.delete(
+        Uri.parse('$BASE_URL/booking/$bookingId'), // Endpunkt zum Stornieren
+        headers: headers,
+      );
 
-    if (response.statusCode == 200) {
-      return; // Erfolg, keine spezielle Rückgabe nötig
-    } else {
-      throw Exception('Fehler beim Stornieren der Buchung. Statuscode: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        return; // Erfolg, keine spezielle Rückgabe nötig
+      } else {
+        throw Exception(
+            'Fehler beim Stornieren der Buchung. Statuscode: ${response.statusCode}');
+      }
+    } on SocketException catch (_) {
+      throw Exception(
+          'Keine Internetverbindung. Bitte überprüfe deine Verbindung.');
+    } on HttpException catch (_) {
+      throw Exception('Fehler beim Laden der Daten.');
+    } on FormatException catch (_) {
+      throw Exception('Antwort konnte nicht gelesen werden (falsches Format).');
+    } catch (e) {
+      throw Exception('Unbekannter Fehler: $e');
     }
   }
 
@@ -169,15 +244,31 @@ class ApiService {
   }) async {
     final headers = await _getHeaders();
 
-    final response = await http.post(
-      Uri.parse('$BASE_URL/message/send'),
-      headers: headers,
-      body: jsonEncode({
-        "subject": subject,
-        "message": message,
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$BASE_URL/message/send'),
+        headers: headers,
+        body: jsonEncode({
+          "subject": subject,
+          "message": message,
+        }),
+      );
 
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Fehler beim Senden des Feedbacks. Statuscode: ${response.statusCode}');
+      }
+    } on SocketException catch (_) {
+      throw Exception(
+          'Keine Internetverbindung. Bitte überprüfe deine Verbindung.');
+    } on HttpException catch (_) {
+      throw Exception('Fehler beim Laden der Daten.');
+    } on FormatException catch (_) {
+      throw Exception('Antwort konnte nicht gelesen werden (falsches Format).');
+    } catch (e) {
+      throw Exception('Unbekannter Fehler: $e');
+    }
+  }
     if (response.statusCode != 200) {
       throw Exception('Fehler beim Senden des Feedbacks. Statuscode: ${response.statusCode}');
     }

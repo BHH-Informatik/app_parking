@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../service/api_service.dart';
 import 'ui/booking_dialog.dart';
 
+// Kalender Seite
 class Page2 extends StatefulWidget {
   const Page2({super.key});
 
@@ -46,8 +47,8 @@ class _Page2State extends State<Page2> {
   // Dialog anzeigen, wenn ein bereits gebuchter Tag angeklickt wird
   void _showBookingDetails(Map<String, dynamic> booking) {
     String timeSlot = 'Ganztägig';
-    if (booking['start_time'] != null && booking['end_time'] != null) {
-      timeSlot = '${booking['start_time']} - ${booking['end_time']}';
+    if (booking['booking_start_time'] != null && booking['booking_end_time'] != null) {
+      timeSlot = '${booking['booking_start_time']} - ${booking['booking_end_time']} Uhr';
     }
 
     showDialog(
@@ -59,6 +60,24 @@ class _Page2State extends State<Page2> {
             'Parkplatz: ${booking['parking_lot_id']}\nDatum: ${DateFormat('dd.MM.yyyy').format(DateTime.parse(booking['booking_date']))}\nZeitraum: $timeSlot',
           ),
           actions: [
+            TextButton(
+              onPressed: () async {
+                final apiService = ApiService();
+                try {
+                  await apiService.cancelBooking(booking['id'].toString());
+                  // onBookingCancel();
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Buchung erfolgreich storniert')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Fehler beim Stornieren der Buchung')),
+                  );
+                }
+              },
+              child: const Text('Stornieren'),
+            ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('OK'),
