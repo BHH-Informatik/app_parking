@@ -47,8 +47,8 @@ class _Page2State extends State<Page2> {
   // Dialog anzeigen, wenn ein bereits gebuchter Tag angeklickt wird
   void _showBookingDetails(Map<String, dynamic> booking) {
     String timeSlot = 'Ganztägig';
-    if (booking['start_time'] != null && booking['end_time'] != null) {
-      timeSlot = '${booking['start_time']} - ${booking['end_time']}';
+    if (booking['booking_start_time'] != null && booking['booking_end_time'] != null) {
+      timeSlot = '${booking['booking_start_time']} - ${booking['booking_end_time']} Uhr';
     }
 
     showDialog(
