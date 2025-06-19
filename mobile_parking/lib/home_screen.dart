@@ -6,7 +6,7 @@ import 'ui/booking_dialog.dart';
 import 'service/api_service.dart'; // Importiere den API-Service
 import 'model/app_colors.dart';
 
-
+// Parken Seite
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 

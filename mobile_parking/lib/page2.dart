@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../service/api_service.dart';
 import 'ui/booking_dialog.dart';
 
+// Kalender Seite
 class Page2 extends StatefulWidget {
   const Page2({super.key});
 
