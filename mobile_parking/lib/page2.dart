@@ -61,6 +61,24 @@ class _Page2State extends State<Page2> {
           ),
           actions: [
             TextButton(
+              onPressed: () async {
+                final apiService = ApiService();
+                try {
+                  await apiService.cancelBooking(booking['id'].toString());
+                  // onBookingCancel();
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Buchung erfolgreich storniert')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Fehler beim Stornieren der Buchung')),
+                  );
+                }
+              },
+              child: const Text('Stornieren'),
+            ),
+            TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('OK'),
             ),
