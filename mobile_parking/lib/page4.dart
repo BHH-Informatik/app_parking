@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_parking/model/parking_lot_status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 import 'main.dart'; // Importiere MyHomePage für den Fall, dass der Benutzer sich ausloggt
 import 'model/app_colors.dart';
-
+import 'package:mobile_parking/service/api_service.dart'; // ApiService importieren
 
 // Einstellungen Seite
 class Page4 extends StatefulWidget {
@@ -123,6 +124,25 @@ class _Page4State extends State<Page4> {
     );
   }
 
+    final ApiService apiService = ApiService(); // Instanz des ApiService
+
+  Future<void> _getCalendar() async {
+
+    try {
+      String link = await apiService.getCalendarLink(); // Verwende ApiService
+
+  // Hier irgendwie Link anzeigen
+  Clipboard.setData(ClipboardData(text: link));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kalender Link wurde in die Zwischenablage kopiert.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Something went wrong.')),
+      );
+    }
+  }
+
   Widget _buildLegendItem(BuildContext context, Color color, String description) {
     return Row(
       children: [
@@ -191,6 +211,11 @@ class _Page4State extends State<Page4> {
             ElevatedButton(
               onPressed: _showLegend,
               child: const Text('Legende anzeigen'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _getCalendar,
+              child: const Text('Kalender Anbindung'),
             ),
           ],
         ),

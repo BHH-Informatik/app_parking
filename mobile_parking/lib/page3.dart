@@ -67,7 +67,7 @@ class _Page3State extends State<Page3> {
         backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(5.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

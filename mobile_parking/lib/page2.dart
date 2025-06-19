@@ -89,7 +89,8 @@ class _Page2State extends State<Page2> {
         backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 0, 0),
+        child: SingleChildScrollView (
         child: Column(
           children: [
             TableCalendar(
@@ -152,7 +153,7 @@ class _Page2State extends State<Page2> {
                 },
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             Text(
               'Ausgewähltes Datum: ${_selectedDay.day}.${_selectedDay.month}.${_selectedDay.year}',
               style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.primary),
@@ -160,6 +161,7 @@ class _Page2State extends State<Page2> {
           ],
         ),
       ),
+      )
     );
   }
 }

@@ -183,4 +183,19 @@ class ApiService {
     }
   }
 
+  Future<String> getCalendarLink() async {
+    final headers = await _getHeaders();
+
+    final response = await http.get(
+      Uri.parse('$BASE_URL/auth/calendar'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body)['link'];
+    } else {
+      throw Exception('Fehler beim Laden des Kalenders: ${response.statusCode}');
+    }
+  }
+
 }
