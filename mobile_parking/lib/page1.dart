@@ -106,7 +106,7 @@ class _Page1State extends State<Page1> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSecondary,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),

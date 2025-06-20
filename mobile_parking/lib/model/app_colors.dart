@@ -25,14 +25,14 @@ const lightColorScheme = ColorScheme(
 const darkColorScheme = ColorScheme(
   brightness: Brightness.dark,
 
-  primary: Color.fromARGB(255,3,146,163), // main color 3
-  onPrimary: Color.fromARGB(255,0,51,104), // main color 4
+  primary: Color.fromARGB(255, 0, 207, 230), // main color 3
+  onPrimary: Color.fromARGB(255, 0, 39, 80), // main color 4
 
-  secondary: Color.fromARGB(192, 252, 108, 92), // main color 1
-  onSecondary: Color.fromARGB(255, 255, 205, 151), // main color 2
+  secondary: Color.fromARGB(255, 255, 174, 174), // main color 1
+  onSecondary: Color.fromARGB(255, 119, 62, 0), // main color 2
   
-  tertiary: Color.fromARGB(255, 35, 63, 78),
-  onTertiary: Color.fromARGB(118, 0, 150, 167),
+  tertiary: Color.fromARGB(255, 62, 106, 129),
+  onTertiary: Color.fromARGB(171, 0, 193, 214),
 
   error: Colors.red,
   onError: Color.fromARGB(255, 255, 152, 152),
