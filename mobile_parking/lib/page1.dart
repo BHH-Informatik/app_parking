@@ -14,6 +14,31 @@ class Page1 extends StatefulWidget {
 class _Page1State extends State<Page1> {
   late Future<List<Booking>> bookings;
   final ApiService apiService = ApiService(); // API Service Initialisieren
+  int? _sortColumnIndex;
+  bool _isAscending = true;
+
+  void _sort<T>(Comparable<T> Function(Booking b) getField, int columnIndex, bool ascending, List<Booking> bookings) {
+    bookings.sort((a, b) {
+      final aValue = getField(a);
+      final bValue = getField(b);
+      return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
+    });
+
+    setState(() {
+      _sortColumnIndex = columnIndex;
+      _isAscending = ascending;
+    });
+  }
+
+  num _extractParkingLotNumber(String input) {
+    final match = RegExp(r'\d+').firstMatch(input);
+    if (match != null) {
+      return num.parse(match.group(0)!);
+    }
+    return double.infinity; // falls keine Zahl enthalten ist – kommt ans Ende
+  }
+
+
 
   @override
   void initState() {
@@ -100,32 +125,55 @@ class _Page1State extends State<Page1> {
   Widget buildTable(List<Booking> data) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Table(
-        border: TableBorder(
-          horizontalInside: BorderSide(width: 2.0, color: Theme.of(context).colorScheme.surface),
-          verticalInside: BorderSide(width: 2.0, color: Theme.of(context).colorScheme.surface),
-        ),
-        children: [
-          TableRow(
-            children: [
-              tableHeader('Parkplatz'),
-              tableHeader('Datum'),
-              tableHeader('Zeitslot'),
-            ],
-          ),
-          ...data.map((booking) {
-            return TableRow(
-              children: [
-                tableCell(booking.parkingLot),
-                tableCell(formatGermanDate(booking.date)),
-                tableCell(formatTimeSlot(booking.startTime, booking.endTime)),
-              ],
-            );
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal, // bei Bedarf scrollbar
+        child: DataTable(
+          columnSpacing: 25,
+          sortColumnIndex: _sortColumnIndex,
+          sortAscending: _isAscending,
+          columns: [
+            DataColumn(
+              label: const Text('Parkplatz'),
+              onSort: (columnIndex, ascending) {
+                _sort<num>(
+                      (b) => _extractParkingLotNumber(b.parkingLot),
+                  columnIndex,
+                  ascending,
+                  data,
+                );
+              },
+
+            ),
+            DataColumn(
+              label: const Text('Datum'),
+              onSort: (columnIndex, ascending) {
+                _sort<String>((b) => b.date, columnIndex, ascending, data);
+              },
+            ),
+            DataColumn(
+              label: const Text('Zeitslot'),
+              onSort: (columnIndex, ascending) {
+                _sort<String>(
+                      (b) => formatTimeSlot(b.startTime, b.endTime),
+                  columnIndex,
+                  ascending,
+                  data,
+                );
+              },
+            ),
+          ],
+          rows: data.map((booking) {
+            return DataRow(cells: [
+              DataCell(Text(booking.parkingLot)),
+              DataCell(Text(formatGermanDate(booking.date))),
+              DataCell(Text(formatTimeSlot(booking.startTime, booking.endTime))),
+            ]);
           }).toList(),
-        ],
+        ),
       ),
     );
   }
+
 
   Widget tableHeader(String text) {
     return Container(
