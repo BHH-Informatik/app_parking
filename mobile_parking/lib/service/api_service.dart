@@ -269,10 +269,6 @@ class ApiService {
       throw Exception('Unbekannter Fehler: $e');
     }
   }
-    if (response.statusCode != 200) {
-      throw Exception('Fehler beim Senden des Feedbacks. Statuscode: ${response.statusCode}');
-    }
-  }
 
   Future<String> getCalendarLink() async {
     final headers = await _getHeaders();
